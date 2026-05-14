@@ -22,4 +22,4 @@ export {
   motifInstances,
   motifMetrics,
   motifQueries,
-} from "./schema.js";
+} from "./schema";

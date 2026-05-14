@@ -58,5 +58,7 @@ export default defineConfig({
   out: "./migrations",
   schema: "./shared/schema.ts",
   dialect: "postgresql",
+  /** Non-interactive / CI: fewer prompts during `drizzle-kit push` on Render. */
+  strict: false,
   dbCredentials: dbCredentials(),
 });

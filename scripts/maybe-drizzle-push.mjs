@@ -22,10 +22,14 @@ if (!db) {
 }
 
 console.log("[render] drizzle-kit push…");
-const result = spawnSync("npx", ["drizzle-kit", "push"], {
-  stdio: "inherit",
-  env: process.env,
-  shell: true,
-});
+const result = spawnSync(
+  "npx",
+  ["drizzle-kit", "push", "--force"],
+  {
+    stdio: "inherit",
+    env: { ...process.env, CI: "true" },
+    shell: true,
+  },
+);
 
 process.exit(result.status === 0 ? 0 : result.status ?? 1);

@@ -37,11 +37,12 @@ function dbCredentials():
   const user = decodeURIComponent(url.username || "postgres");
   const password = decodeURIComponent(url.password || "");
 
-  // Render Postgres often uses a chain that fails strict verification from some
-  // home networks / Node versions when using drizzle-kit only (not runtime).
-  const renderHost =
-    url.hostname.includes("render.com") || url.hostname.endsWith(".render.com");
-  const insecureKitSsl = renderHost || process.env.DRIZZLE_KIT_SSL_INSECURE === "1";
+  // Render Postgres (internal host is often dpg-…; external uses *.render.com).
+  const renderPostgres =
+    url.hostname.includes("render.com") ||
+    url.hostname.endsWith(".render.com") ||
+    url.hostname.startsWith("dpg-");
+  const insecureKitSsl = renderPostgres || process.env.DRIZZLE_KIT_SSL_INSECURE === "1";
 
   return {
     host: url.hostname,

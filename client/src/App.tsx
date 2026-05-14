@@ -2,7 +2,9 @@ import * as React from "react";
 import { Switch, Route, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Toaster } from "@/components/ui/Toaster";
+import { isAdminHost } from "@/lib/adminHost";
 import { RequireAuth } from "@/components/RequireAuth";
 import { ConsentBanner } from "@/components/ConsentBanner";
 import { bootstrapConsent, trackPageView } from "@/lib/analytics";
@@ -44,6 +46,7 @@ const MyStatistics = React.lazy(() => import("@/pages/my-statistics"));
 const CoachPage = React.lazy(() => import("@/pages/coach"));
 const LoginPage = React.lazy(() => import("@/pages/login"));
 const AdminPricing = React.lazy(() => import("@/pages/admin-pricing"));
+const AdminSiteAnalytics = React.lazy(() => import("@/pages/admin/site-analytics"));
 const PricingPage = React.lazy(() => import("@/pages/pricing"));
 const ThanksPage = React.lazy(() => import("@/pages/thanks"));
 const AccountBillingPage = React.lazy(() => import("@/pages/account-billing"));
@@ -106,7 +109,32 @@ function AnalyticsSync() {
   return null;
 }
 
+/** Dedicated shell on `goadmingo.<apex>` / `admin.<apex>` (see `isAdminHost`). */
+function AdminApp() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AnalyticsSync />
+      <React.Suspense fallback={<PageFallback />}>
+        <AdminLayout>
+          <Switch>
+            <Route path="/" component={() => <Redirect to="/admin/site-analytics" />} />
+            <Route path="/admin/site-analytics" component={AdminSiteAnalytics} />
+            <Route path="/admin/pricing" component={AdminPricing} />
+            <Route component={NotFound} />
+          </Switch>
+        </AdminLayout>
+      </React.Suspense>
+      <Toaster />
+      <ConsentBanner />
+    </QueryClientProvider>
+  );
+}
+
 export default function App() {
+  if (typeof window !== "undefined" && isAdminHost()) {
+    return <AdminApp />;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <AnalyticsSync />

@@ -103,9 +103,11 @@ export default function AdminSiteAnalyticsPage() {
       <div>
         <h1 className="text-xl font-semibold tracking-tight">Site analytics</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Also reachable from <strong>Analyze → Analytics</strong>, tab <strong>Site traffic (ops)</strong>.
-          Page views and sessions collected after visitors accept analytics cookies. Requires Postgres
-          (<code className="text-[11px]">DATABASE_URL</code>) on the server.
+          On the main site: <strong>Analyze → Analytics</strong>, tab <strong>Site traffic (ops)</strong>.
+          On <strong>{"goadmingo.<your-apex>"}</strong> you get this operator shell (set{" "}
+          <code className="text-[11px]">VITE_SITE_APEX</code> at build). Page views and sessions after
+          visitors accept analytics cookies. Requires Postgres (
+          <code className="text-[11px]">DATABASE_URL</code>) on the server.
         </p>
       </div>
 

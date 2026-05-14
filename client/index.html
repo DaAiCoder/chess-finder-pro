@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#769656" />
+    <!-- Runtime-filled by the Node server: comma-separated operator console hostnames. -->
+    <meta name="cfp-operator-hostnames" content="%CFP_OPERATOR_HOSTNAMES%" />
 
     <!-- Primary SEO -->
     <title>Chess Finder Pro — AI coach, deep analysis, and 15+ trainers</title>
@@ -54,21 +56,7 @@
       configured at build time — open-source forks without analytics keys
       get a no-op shim.
     -->
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        window.dataLayer.push(arguments);
-      }
-      window.gtag = gtag;
-      gtag("consent", "default", {
-        ad_storage: "denied",
-        analytics_storage: "denied",
-        ad_user_data: "denied",
-        ad_personalization: "denied",
-        wait_for_update: 500,
-      });
-      gtag("js", new Date());
-    </script>
+    <script defer src="/gtag-consent-bootstrap.js"></script>
     <script type="module">
       const ga4 = (import.meta.env && import.meta.env.VITE_GA4_MEASUREMENT_ID) || "";
       const ads = (import.meta.env && import.meta.env.VITE_GOOGLE_ADS_ID) || "";

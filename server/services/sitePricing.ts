@@ -81,7 +81,7 @@ export async function setSitePricing(patch: {
   return getSitePricing();
 }
 
-function adminKeyOk(req: Request): boolean {
+export function adminKeyOk(req: Request): boolean {
   const key = process.env.ADMIN_API_KEY?.trim();
   if (!key) return false;
   const bearer = req.headers.authorization?.replace(/^Bearer\s+/i, "").trim();

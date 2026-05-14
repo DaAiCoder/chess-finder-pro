@@ -113,9 +113,19 @@ export function installAuth(app: Express): void {
             directives: {
               "default-src": ["'self'"],
               "img-src": ["'self'", "data:", "blob:", "https:"],
-              "script-src": ["'self'"],
+              // No inline scripts in production HTML: gtag bootstrap lives at
+              // `/gtag-consent-bootstrap.js` so CSP survives multiple policies
+              // (e.g. Cloudflare ∩ Helmet) intersecting to strict `script-src 'self'`.
+              "script-src": ["'self'", "https://www.googletagmanager.com"],
               "style-src": ["'self'", "'unsafe-inline'"],
-              "connect-src": ["'self'", "https://lichess.org", "https://api.chess.com"],
+              "connect-src": [
+                "'self'",
+                "https://lichess.org",
+                "https://api.chess.com",
+                "https://www.google-analytics.com",
+                "https://www.googletagmanager.com",
+                "https://region1.google-analytics.com",
+              ],
               "frame-ancestors": ["'none'"],
               "object-src": ["'none'"],
               "base-uri": ["'self'"],

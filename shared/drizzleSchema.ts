@@ -22,4 +22,6 @@ export {
   motifInstances,
   motifMetrics,
   motifQueries,
+  analyticsSessions,
+  analyticsPageViews,
 } from "./schema";

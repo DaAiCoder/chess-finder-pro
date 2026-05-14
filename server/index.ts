@@ -9,10 +9,12 @@ import { maybeAutoSeedLibrary } from "./services/autoSeedLibrary.js";
 import { ensureRatedBandGames } from "./services/ratedBandLibrarySeed.js";
 import { installAuth, registerAuthRoutes } from "./auth.js";
 import { registerSitePricingRoutes } from "./services/sitePricing.js";
+import { registerSiteAnalyticsRoutes } from "./services/siteAnalytics.js";
 import { registerBillingRoutes, registerBillingWebhook } from "./services/billing.js";
 import { runStartupSelfTests } from "./selfTest.js";
 import { startGeneratorCron } from "./services/generatorCron.js";
 import { resolveCoachLlmForExplain } from "./services/coachLlm.js";
+import { injectOperatorPortalMeta } from "./spaHtmlInject.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,6 +24,7 @@ const NODE_ENV = process.env.NODE_ENV ?? "development";
 
 async function main() {
   const app = express();
+  app.set("trust proxy", 1);
 
   // Stripe webhook must see the RAW request body to verify the signature, so
   // it must be registered BEFORE `express.json()`. The handler itself uses
@@ -47,6 +50,7 @@ async function main() {
   installAuth(app);
   registerAuthRoutes(app);
   registerSitePricingRoutes(app);
+  registerSiteAnalyticsRoutes(app);
   registerBillingRoutes(app);
   registerRoutes(app);
 
@@ -78,16 +82,45 @@ async function main() {
         const fs = await import("node:fs/promises");
         let html = await fs.readFile(indexPath, "utf-8");
         html = await vite.transformIndexHtml(url, html);
-        res.status(200).set({ "Content-Type": "text/html" }).end(html);
+        html = injectOperatorPortalMeta(html, req);
+        res
+          .status(200)
+          .set({
+            "Content-Type": "text/html; charset=utf-8",
+            // Avoid stale SPA shells at CDNs (Cloudflare “cache everything” /
+            // browser bfcache) after deploy — old HTML kept inline gtag blocked by CSP.
+            "Cache-Control": "private, no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+          })
+          .end(html);
       } catch (e) {
         next(e);
       }
     });
   } else {
     const distClient = path.resolve(__dirname, "../client");
-    app.use(express.static(distClient));
-    app.get("*", (_req, res) => {
-      res.sendFile(path.join(distClient, "index.html"));
+    const indexPath = path.join(distClient, "index.html");
+    const fs = await import("node:fs/promises");
+    let cachedSpaHtml: string | null = null;
+    app.use(express.static(distClient, { index: false }));
+    app.get("*", async (req, res, next) => {
+      if (req.path.startsWith("/api")) return next();
+      try {
+        if (cachedSpaHtml === null) {
+          cachedSpaHtml = await fs.readFile(indexPath, "utf-8");
+        }
+        const html = injectOperatorPortalMeta(cachedSpaHtml, req);
+        res
+          .status(200)
+          .set({
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "private, no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+          })
+          .send(html);
+      } catch (e) {
+        next(e);
+      }
     });
   }
 

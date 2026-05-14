@@ -2,6 +2,7 @@ import * as React from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/Button";
 import { setConsent, hasConsentDecision } from "@/lib/analytics";
+import { flushInternalPageView } from "@/lib/internalAnalytics";
 
 /**
  * Cookie consent banner — Consent Mode v2 compliant.
@@ -26,6 +27,9 @@ export function ConsentBanner() {
 
   const decide = (grant: boolean) => {
     setConsent(grant);
+    if (grant) {
+      flushInternalPageView();
+    }
     setOpen(false);
   };
 

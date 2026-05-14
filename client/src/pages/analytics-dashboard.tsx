@@ -4,7 +4,7 @@ import {
   CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
   PieChart, Pie, Cell,
 } from "recharts";
-import { Link } from "wouter";
+import { Link, useSearchParams } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -36,6 +36,8 @@ const PERIODS = [
   { label: "3mo", days: 90 }, { label: "6mo", days: 180 }, { label: "1yr", days: 365 },
   { label: "All", days: 0 },
 ];
+
+const SiteTrafficOps = React.lazy(() => import("@/pages/admin/site-analytics"));
 
 interface AnalyticsResponse {
   buckets: AnalyticsBucket[];
@@ -124,6 +126,8 @@ interface BatchJob {
 }
 
 export default function AnalyticsDashboard() {
+  const [searchParams] = useSearchParams();
+  const openSiteTab = searchParams.get("site") === "1";
   const [username, setUsername] = React.useState("");
   const [activeUsername, setActiveUsername] = React.useState("");
   const [periodIdx, setPeriodIdx] = React.useState(2);
@@ -198,37 +202,46 @@ export default function AnalyticsDashboard() {
     <div className="p-4 md:p-6 space-y-4 max-w-6xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold">Analytics</h1>
-        <p className="text-muted-foreground text-sm">Skill scores across your imported games.</p>
+        <p className="text-muted-foreground text-sm">
+          Your imported games and skill scores. Use <strong>Site traffic</strong> for first‑party
+          page‑view stats (requires <code className="text-xs">ADMIN_API_KEY</code>).
+        </p>
       </div>
 
-      <Card>
-        <CardContent className="p-4 flex items-end gap-3">
-          <div className="flex-1">
-            <Label>Username</Label>
-            <Input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="The username you imported games for"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && username.trim()) setActiveUsername(username.trim());
-              }}
-            />
-          </div>
-          <Button onClick={() => setActiveUsername(username.trim())} disabled={!username.trim()}>
-            Analyze
-          </Button>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue={openSiteTab ? "site" : "chess"} className="w-full">
+        <TabsList className="flex flex-wrap h-auto gap-1 py-1">
+          <TabsTrigger value="chess">Your chess</TabsTrigger>
+          <TabsTrigger value="site">Site traffic (ops)</TabsTrigger>
+        </TabsList>
+        <TabsContent value="chess" className="space-y-4 mt-4">
+          <Card>
+            <CardContent className="p-4 flex items-end gap-3">
+              <div className="flex-1">
+                <Label>Username</Label>
+                <Input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="The username you imported games for"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && username.trim()) setActiveUsername(username.trim());
+                  }}
+                />
+              </div>
+              <Button onClick={() => setActiveUsername(username.trim())} disabled={!username.trim()}>
+                Analyze
+              </Button>
+            </CardContent>
+          </Card>
 
-      {activeUsername && status.data && (
+          {activeUsername && status.data && (
         <BatchProgressBar
           job={status.data}
           onCancel={() => cancelBatch.mutate()}
           cancelling={cancelBatch.isPending}
         />
-      )}
+          )}
 
-      {filtered && (
+          {filtered && (
         <>
           <div className="flex flex-wrap items-center gap-2">
             {PERIODS.map((p, i) => (
@@ -303,8 +316,19 @@ export default function AnalyticsDashboard() {
               </Card>
             </TabsContent>
           </Tabs>
-        </>
-      )}
+          </>
+          )}
+        </TabsContent>
+        <TabsContent value="site" className="mt-4">
+          <React.Suspense
+            fallback={
+              <p className="text-sm text-muted-foreground py-8 text-center">Loading site analytics…</p>
+            }
+          >
+            <SiteTrafficOps />
+          </React.Suspense>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

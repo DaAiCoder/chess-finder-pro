@@ -1,12 +1,12 @@
 import * as React from "react";
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Toaster } from "@/components/ui/Toaster";
 import { RequireAuth } from "@/components/RequireAuth";
 import { ConsentBanner } from "@/components/ConsentBanner";
 import { bootstrapConsent, trackPageView } from "@/lib/analytics";
-
+import { trackInternalPageView } from "@/lib/internalAnalytics";
 import ChessTrainer from "@/pages/chess-trainer";
 import Onboarding from "@/pages/onboarding";
 import NotFound from "@/pages/not-found";
@@ -101,6 +101,7 @@ function AnalyticsSync() {
   }, []);
   React.useEffect(() => {
     trackPageView(loc);
+    trackInternalPageView();
   }, [loc]);
   return null;
 }
@@ -133,6 +134,15 @@ export default function App() {
                 <Route path="/import" component={ImportGames} />
                 <Route path="/game-analysis/:id" component={GameAnalysis} />
                 <Route path="/analytics" component={AnalyticsDashboard} />
+                <Route
+                  path="/site-analytics"
+                  component={() => <Redirect to="/analytics?site=1" />}
+                />
+                <Route path="/admin/pricing" component={AdminPricing} />
+                <Route
+                  path="/admin/site-analytics"
+                  component={() => <Redirect to="/analytics?site=1" />}
+                />
                 <Route path="/opponent-prep">
                   <RequireAuth feature="opponent">
                     <OpponentPrep />
@@ -191,7 +201,6 @@ export default function App() {
                 <Route path="/legal/terms" component={TermsPage} />
                 <Route path="/legal/refund" component={RefundPage} />
                 <Route path="/legal/contact" component={ContactPage} />
-                <Route path="/admin/pricing" component={AdminPricing} />
                 <Route path="/training/pawn-structures" component={PawnStructureTrainer} />
                 <Route path="/training/plans" component={PlanFinderTrainer} />
                 <Route path="/training/calculation-studio" component={CalculationStudio} />

@@ -10,6 +10,7 @@ import {
   varchar,
   date,
   unique,
+  index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -401,6 +402,49 @@ export type InsertMotifQuery = Omit<
 > & {
   results?: unknown;
 };
+
+/* ---------------------------------------------------------------------- */
+/* 17. First-party site analytics (sessions + page views, admin dashboard) */
+/* ---------------------------------------------------------------------- */
+export const analyticsSessions = pgTable(
+  "analytics_sessions",
+  {
+    id: varchar("id", { length: 36 }).primaryKey(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull(),
+    anonymousId: varchar("anonymous_id", { length: 64 }).notNull(),
+    userId: integer("user_id"),
+    country: varchar("country", { length: 2 }),
+    referrer: varchar("referrer", { length: 2048 }),
+    userAgent: varchar("user_agent", { length: 512 }),
+    clientLocale: varchar("client_locale", { length: 32 }),
+    clientTimezone: varchar("client_timezone", { length: 64 }),
+  },
+  (t) => [
+    index("analytics_sessions_started_idx").on(t.startedAt),
+    index("analytics_sessions_country_idx").on(t.country),
+    index("analytics_sessions_user_idx").on(t.userId),
+  ],
+);
+
+export const analyticsPageViews = pgTable(
+  "analytics_page_views",
+  {
+    id: serial("id").primaryKey(),
+    sessionId: varchar("session_id", { length: 36 })
+      .notNull()
+      .references(() => analyticsSessions.id, { onDelete: "cascade" }),
+    path: text("path").notNull(),
+    query: varchar("query", { length: 512 }),
+    title: varchar("title", { length: 512 }),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    index("analytics_pv_session_idx").on(t.sessionId),
+    index("analytics_pv_occurred_idx").on(t.occurredAt),
+    index("analytics_pv_path_idx").on(t.path),
+  ],
+);
 
 /* ---------------------------------------------------------------------- */
 /* Shared application-level value types                                    */

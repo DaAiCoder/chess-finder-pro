@@ -54,37 +54,11 @@ function dbCredentials():
   };
 }
 
-/**
- * Tables managed by `drizzle-kit push`.
- *
- * Omit tables owned by raw SQL so kit does not emit conflicting DDL:
- * - `app_snapshot` — `server/neonSnapshot.ts` (CHECK id = 1, etc.; push hit 42P16).
- * - `training_attempts`, `user_streaks`, `user_motif_skills` —
- *   `server/services/relationalMirror.ts` (schema drift vs Drizzle also risked 42P16).
- */
-const TABLES_MANAGED_BY_DRIZZLE = [
-  "users",
-  "chess_queries",
-  "chess_positions",
-  "opening_lines",
-  "games",
-  "game_analysis",
-  "opponent_profiles",
-  "training_problems",
-  "training_progress",
-  "daily_challenges",
-  "motif_definitions",
-  "motif_instances",
-  "motif_metrics",
-  "motif_queries",
-] as const;
-
 export default defineConfig({
   out: "./migrations",
-  schema: "./shared/schema.ts",
+  schema: "./shared/drizzleSchema.ts",
   dialect: "postgresql",
   /** Non-interactive / CI: fewer prompts during `drizzle-kit push` on Render. */
   strict: false,
-  tablesFilter: [...TABLES_MANAGED_BY_DRIZZLE],
   dbCredentials: dbCredentials(),
 });

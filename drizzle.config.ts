@@ -55,9 +55,12 @@ function dbCredentials():
 }
 
 /**
- * Tables managed by `drizzle-kit push`. Omit `app_snapshot`: it is created by
- * raw SQL in `server/neonSnapshot.ts` (CHECK id = 1, etc.); including it in the
- * Drizzle schema caused Postgres 42P16 errors during push on Render.
+ * Tables managed by `drizzle-kit push`.
+ *
+ * Omit tables owned by raw SQL so kit does not emit conflicting DDL:
+ * - `app_snapshot` — `server/neonSnapshot.ts` (CHECK id = 1, etc.; push hit 42P16).
+ * - `training_attempts`, `user_streaks`, `user_motif_skills` —
+ *   `server/services/relationalMirror.ts` (schema drift vs Drizzle also risked 42P16).
  */
 const TABLES_MANAGED_BY_DRIZZLE = [
   "users",
@@ -68,11 +71,8 @@ const TABLES_MANAGED_BY_DRIZZLE = [
   "game_analysis",
   "opponent_profiles",
   "training_problems",
-  "training_attempts",
   "training_progress",
   "daily_challenges",
-  "user_streaks",
-  "user_motif_skills",
   "motif_definitions",
   "motif_instances",
   "motif_metrics",

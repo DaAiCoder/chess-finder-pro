@@ -242,6 +242,26 @@ function normalizeStreakRow(s: UserStreak): UserStreak {
   };
 }
 
+/** JSONB / JSON snapshots store dates as strings; coerce for `.getTime()` etc. */
+function coerceDate(value: unknown): Date | null {
+  if (value == null) return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value === "string" || typeof value === "number") {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}
+
+function compareByPlayedOrCreated(
+  a: { playedAt?: Date | null; createdAt: Date },
+  b: { playedAt?: Date | null; createdAt: Date },
+): number {
+  const at = (coerceDate(a.playedAt) ?? coerceDate(a.createdAt) ?? new Date(0)).getTime();
+  const bt = (coerceDate(b.playedAt) ?? coerceDate(b.createdAt) ?? new Date(0)).getTime();
+  return bt - at;
+}
+
 class InMemoryStorage implements IStorage {
   private nextId = 1;
   private id() {
@@ -449,7 +469,14 @@ class InMemoryStorage implements IStorage {
       };
       this.users.set(row.id, row);
     }
-    for (const g of snapshot.games ?? []) this.games.set(g.id, g);
+    for (const g of snapshot.games ?? []) {
+      const row: Game = {
+        ...g,
+        playedAt: coerceDate(g.playedAt),
+        createdAt: coerceDate(g.createdAt) ?? new Date(),
+      };
+      this.games.set(row.id, row);
+    }
     for (const a of snapshot.analyses ?? []) this.analyses.set(a.gameId, a);
     for (const p of snapshot.positions ?? []) this.positions.set(p.fen, p);
     this.queries = snapshot.queries ?? [];
@@ -481,15 +508,20 @@ class InMemoryStorage implements IStorage {
       this.variantGames.set(normalized.id, normalized);
     }
     for (const g of snapshot.libraryGames ?? []) {
-      this.libraryGames.set(g.id, g);
-      this.libraryHashIndex.set(g.pgnHash, g.id);
-      for (const epd of g.epds ?? []) {
+      const row: LibraryGame = {
+        ...g,
+        playedAt: coerceDate(g.playedAt),
+        createdAt: coerceDate(g.createdAt) ?? new Date(),
+      };
+      this.libraryGames.set(row.id, row);
+      this.libraryHashIndex.set(row.pgnHash, row.id);
+      for (const epd of row.epds ?? []) {
         let s = this.libraryEpdIndex.get(epd);
         if (!s) {
           s = new Set();
           this.libraryEpdIndex.set(epd, s);
         }
-        s.add(g.id);
+        s.add(row.id);
       }
     }
     for (const s of snapshot.libraryStats ?? []) {
@@ -639,11 +671,7 @@ class InMemoryStorage implements IStorage {
   /* games */
   async listGames(userId?: number) {
     const all = Array.from(this.games.values());
-    return (userId == null ? all : all.filter((g) => g.userId === userId)).sort((a, b) => {
-      const at = (a.playedAt ?? a.createdAt).getTime();
-      const bt = (b.playedAt ?? b.createdAt).getTime();
-      return bt - at;
-    });
+    return (userId == null ? all : all.filter((g) => g.userId === userId)).sort(compareByPlayedOrCreated);
   }
   async getGame(id: number) {
     return this.games.get(id);
@@ -1258,20 +1286,18 @@ class InMemoryStorage implements IStorage {
       arr = arr.filter((g) => (g.avgRating ?? 9999) <= (filter.maxRating as number));
     }
     if (filter?.yearFrom != null) {
-      arr = arr.filter(
-        (g) => (g.playedAt ? g.playedAt.getFullYear() : 0) >= (filter.yearFrom as number),
-      );
+      arr = arr.filter((g) => {
+        const played = coerceDate(g.playedAt);
+        return (played ? played.getFullYear() : 0) >= (filter.yearFrom as number);
+      });
     }
     if (filter?.yearTo != null) {
-      arr = arr.filter(
-        (g) => (g.playedAt ? g.playedAt.getFullYear() : 9999) <= (filter.yearTo as number),
-      );
+      arr = arr.filter((g) => {
+        const played = coerceDate(g.playedAt);
+        return (played ? played.getFullYear() : 9999) <= (filter.yearTo as number);
+      });
     }
-    arr.sort((a, b) => {
-      const at = (a.playedAt ?? a.createdAt).getTime();
-      const bt = (b.playedAt ?? b.createdAt).getTime();
-      return bt - at;
-    });
+    arr.sort(compareByPlayedOrCreated);
     const offset = filter?.offset ?? 0;
     const limit = filter?.limit ?? 50;
     return arr.slice(offset, offset + limit);

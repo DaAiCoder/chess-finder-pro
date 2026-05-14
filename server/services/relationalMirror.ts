@@ -26,25 +26,25 @@
  * connection doesn't spam the dev console.
  */
 
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/postgres-js";
 import { sql } from "drizzle-orm";
+import { getPostgresSql } from "../pgClient.js";
 import type {
   InsertTrainingAttempt,
   InsertUserMotifSkill,
   InsertUserStreak,
 } from "../../shared/schema.js";
 
-type DrizzleHttp = ReturnType<typeof drizzle>;
+type DrizzlePg = ReturnType<typeof drizzle>;
 
-let db: DrizzleHttp | null = null;
+let db: DrizzlePg | null = null;
 let warned = false;
 
-function getDb(): DrizzleHttp | null {
-  if (!process.env.DATABASE_URL) return null;
+function getDb(): DrizzlePg | null {
+  const client = getPostgresSql();
+  if (!client) return null;
   if (!db) {
     try {
-      const client = neon(process.env.DATABASE_URL);
       db = drizzle(client);
     } catch (err) {
       if (!warned) {

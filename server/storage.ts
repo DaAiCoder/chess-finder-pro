@@ -1,7 +1,8 @@
 /**
  * Storage layer.
  *
- * - If `DATABASE_URL` is set, uses Drizzle + Neon serverless Postgres.
+ * - If `DATABASE_URL` is set, persists via TCP Postgres (`postgres.js`) —
+ *   Render, Neon, or local.
  * - Otherwise, falls back to a process-local in-memory implementation
  *   that satisfies the same interface (perfect for local dev / demos).
  *   The in-memory implementation also persists to a single JSON file

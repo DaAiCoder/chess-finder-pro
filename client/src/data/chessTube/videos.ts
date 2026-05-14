@@ -1,0 +1,83 @@
+import type { ChessTubeCategory, ChessTubeVideo } from "./types";
+
+const cat = (s: string) => s.split("|") as ChessTubeCategory[];
+
+function v(
+  id: string,
+  youtubeId: string,
+  title: string,
+  creator: string,
+  categories: string,
+  series?: string,
+): ChessTubeVideo {
+  return { kind: "video", id, youtubeId, title, creator, categories: cat(categories), series };
+}
+
+/**
+ * Hand-curated lessons (unique YouTube IDs). Many entries span multiple topics.
+ * Add rows here to grow the catalog — keep titles aligned with the public video title.
+ */
+export const CHESS_TUBE_VIDEOS: ChessTubeVideo[] = [
+  v("gt-study-openings", "6IegDENuxU4", "How To Learn & Study Chess Openings", "GothamChess", "openings|opening-series|strategy|beginner", "Gotham staples"),
+  v("gt-openings-basics", "8IlJ3v8I4Z8", "Basic Chess Openings Explained", "GothamChess", "openings|beginner|strategy", "Gotham staples"),
+  v("gt-london-10", "49H728S_VjM", "Learn the London System | 10-Minute Chess Openings", "GothamChess", "openings|opening-series|beginner", "10-Minute Openings"),
+  v("gt-pawn-structures", "yAnNQY2Ac6w", "Top 5 Pawn Structures You Should Know", "GothamChess", "middlegame|strategy|openings", "Gotham staples"),
+  v("gt-london-crush", "ECMMct_jnEM", "How to WIN with the London System!", "GothamChess", "openings|traps|middlegame", "London"),
+  v("gt-traps-10", "fotEfEXL60o", "10 Chess Traps to Win FAST!!", "GothamChess", "traps|tactics|beginner", "Gotham staples"),
+  v("gt-punish-queen", "cY9zitJFglc", "How To PUNISH Early Queen Attacks In Chess", "GothamChess", "traps|tactics|openings|beginner", "Gotham staples"),
+  v("gt-common-mistakes", "SXrKRA_KZ5k", "7 MOST COMMON Chess Mistakes", "GothamChess", "beginner|strategy|middlegame", "Gotham staples"),
+  v("gt-crush-london-anti", "Nc8rzTIfFCw", "Want To Crush The London System?", "GothamChess", "openings|strategy|middlegame", "Anti-openings"),
+  v("gt-tips-crush", "fGFl4GjVvrA", "10 Chess Tips To CRUSH Everyone", "GothamChess", "strategy|tactics|beginner", "Gotham staples"),
+  v("gt-sicilian-10", "qM4e7g2RukI", "The Sicilian Defense | 10-Minute Chess Openings", "GothamChess", "openings|opening-series|strategy", "10-Minute Openings"),
+  v("ag-morphy-anderssen", "R4Lgg06iyXM", "Anderssen vs Morphy (1858) — historic game", "agadmator", "history|openings|tactics", "Classic games"),
+  v("ag-opera", "Z-2FpiEzeYI", "Opera House game — Morphy", "agadmator", "history|tactics|openings", "Classic games"),
+  v("ag-immortal-original", "AaKWUiiEHgA", "The Original Immortal Game", "agadmator", "history|tactics", "Immortal games"),
+  v("ag-kasparov-immortal", "uDi6s89ooak", "Garry Kasparov's Immortal Game", "agadmator", "history|tactics|world-championship", "Immortal games"),
+  v("ag-steinitz-immortal", "oTAPKCHvTh8", "Steinitz's Immortal — bravest rook", "agadmator", "history|tactics", "Immortal games"),
+  v("ag-rubinstein-immortal", "OQB74BbvXQw", "Rubinstein's Immortal Game", "agadmator", "history|tactics", "Immortal games"),
+  v("ag-carlsen-caruana-human", "-uNJMk4I4u4", "Carlsen vs Caruana — are these guys even human?", "agadmator", "world-championship|middlegame|strategy", "WC & modern"),
+  v("ag-alphazero-zugzwang", "lFXJWPhDsSY", "AlphaZero's Immortal Zugzwang Game vs Stockfish", "agadmator", "computers-engines|history|strategy", "AlphaZero"),
+  v("cn-tactics-terms", "phbYrGwgjHk", "Chess Tactics | Terminology — Beginner to Chess Master #9", "ChessNetwork", "tactics|beginner|traps", "B2M"),
+  v("jb-fund-1", "Ao9iOeK_jvU", "Chess Fundamentals #1: Undefended Pieces", "John Bartholomew", "beginner|tactics|strategy", "Chess Fundamentals"),
+  v("jb-fund-2", "TWJ6751RRis", "Chess Fundamentals #2: Coordination", "John Bartholomew", "middlegame|strategy|beginner", "Chess Fundamentals"),
+  v("jb-fund-3", "I5o2d9slUCM", "Chess Fundamentals #3: Typical Mistakes", "John Bartholomew", "beginner|strategy|middlegame", "Chess Fundamentals"),
+  v("jb-fund-4", "h-JGqEiNs-I", "Chess Fundamentals #4: Pawn Play", "John Bartholomew", "endgames|strategy|middlegame", "Chess Fundamentals"),
+  v("dn-knight-pawns-1", "owTm2uYWym4", "Knight vs Pawns — Principles of Chess Endgames", "Daniel Naroditsky", "endgames|strategy", "Endgame principles"),
+  v("dn-knight-pawns-2", "g7AcF_hQhvg", "Knight v Pawn Endings, Part 2 — test your knowledge", "Daniel Naroditsky", "endgames|tactics", "Endgame principles"),
+  v("dn-pawn-test-2", "qTKk-cGcTZ4", "Test Your Pawn Endgame Knowledge, Part 2", "Daniel Naroditsky", "endgames|tactics", "Endgame principles"),
+  v("dn-pawn-test-1", "VWeZ8m34BSk", "Test Your Pawn Endgame Knowledge, Part 1", "Daniel Naroditsky", "endgames|tactics", "Endgame principles"),
+  v("dn-knight-pawns-alt", "CCLlstRUbAc", "Knight vs Pawns — beginner to master", "Daniel Naroditsky", "endgames|beginner", "Endgame principles"),
+  v("wc-nepo-carlsen-g6-agad", "A8XpSCL2f_Y", "Carlsen vs Nepomniachtchi — WCC 2021 Game 6", "agadmator", "world-championship|history|middlegame", "World Championship"),
+  v("wc-nepo-carlsen-g6-cn", "056Vp-XjzAo", "Longest WCC game — Carlsen vs Nepo Game 6", "ChessNetwork", "world-championship|endgames|middlegame", "World Championship"),
+  v("wc-nepo-carlsen-g6-long", "smU_RbUOnGI", "8 hour chess game!? — Carlsen vs Nepo Game 6", "Various creators", "world-championship|stream-highlights", "World Championship"),
+  v("open-caro-15", "HvER2idtW6M", "Learn the Caro-Kann in 15 Minutes", "Remote Chess Academy", "openings|strategy", "Openings crash courses"),
+  v("open-caro-10", "rmbU97iftC8", "Learn the Caro-Kann Defense | 10-Minute Chess Openings", "GothamChess", "openings|opening-series|beginner", "10-Minute Openings"),
+  v("open-caro-cheatcode", "zH8PwDnE8vQ", "The CHEAT CODE of Chess Openings: Caro-Kann", "GothamChess", "openings|strategy|middlegame", "Caro-Kann"),
+  v("open-sicilian-all", "2miolLK8DiI", "Sicilian Defense ALL Variations Explained in 15 Minutes", "thechessnerd", "openings|opening-series|strategy", "Sicilian hub"),
+  v("open-sicilian-strategy", "UQlQjco7Mc8", "Sicilian Defense — strategy, structures, plans", "Remote Chess Academy", "openings|middlegame|strategy", "Sicilian hub"),
+  v("slcc-diagonals", "AZAD1HgLNU4", "Clear the Way! Long Diagonals & Open Files", "Saint Louis Chess Club", "beginner|strategy|middlegame", "Beginner Breakdown"),
+  v("slcc-learn-opening", "FodfDkW7OMo", "How to Learn a New Chess Opening", "Saint Louis Chess Club", "openings|opening-series|beginner", "Beginner Breakdown"),
+  v("slcc-popular-openings", "Xtty2zk3n9o", "Popular Beginner Openings — WGM Tatev Abrahamyan", "Saint Louis Chess Club", "openings|beginner", "Beginner Breakdown"),
+  v("brah-banter-queen-odds", "REot7d0sprY", "Grandmaster trolls trash talker with queen odds", "chessbrah", "stream-highlights|tactics|traps", "Banter blitz"),
+  v("rosen-brilliant", "KrVoqi8ISIo", "This blunder was actually BRILLIANT", "Eric Rosen", "stream-highlights|tactics", "Eric Rosen"),
+  v("rosen-traps-ep1", "rxvr8mAflcY", "Best beginner openings to win quickly — traps speedrun ep.1", "Eric Rosen", "traps|openings|beginner", "Tricks & Traps Speedrun"),
+  v("rosen-traps-ep2", "-AcvPJsqkcQ", "Punish this chess opening! — traps speedrun ep.2", "Eric Rosen", "traps|openings|tactics", "Tricks & Traps Speedrun"),
+  v("hp-kid-intro", "mND6TK5dSKQ", "Introduction to the King's Indian Defense", "Hanging Pawns", "openings|strategy|middlegame", "Hanging Pawns"),
+  v("ct-kid-black", "p3RMUzoEBo4", "Learn the King's Indian for Black", "Chess Talk", "openings|strategy|middlegame", "Chess Talk"),
+  v("cg-kid-long", "3iB8gltgJIE", "Chess Openings: Learn to Play the King's Indian Defense!", "The Chess Giant", "openings|opening-series|strategy", "Deep dives"),
+  v("ruy-smirnov-traps", "xD0iTgHMQVQ", "Ruy Lopez in 10 minutes [traps included]", "Remote Chess Academy", "openings|traps|beginner", "Spanish / Ruy"),
+  v("ruy-deadly-traps", "DGfbomvX334", "Ruy Lopez in 10 minutes (deadly traps)", "Remote Chess Academy", "openings|traps", "Spanish / Ruy"),
+  v("ruy-ramirez", "2_BHjux7quw", "The Ruy Lopez — basics & game analysis", "NM Robert Ramirez", "openings|beginner", "Spanish / Ruy"),
+  v("ruy-website", "41rPFNY_CAY", "Chess Openings: Ruy Lopez", "The Chess Website", "openings|beginner", "Spanish / Ruy"),
+  v("ruy-grandelius", "tN5QElOOjfw", "The Ruy Lopez explained by GM Nils Grandelius", "FIDE Chess", "openings|world-championship|strategy", "Spanish / Ruy"),
+  v("dk-rossolimo", "G64F-t2NMt0", "Beat the Rossolimo", "PowerPlayChess", "openings|strategy|middlegame", "Daniel King"),
+  v("tcec-stockfish-king-cn", "e8TvoloaX8k", "Stockfish is KING — Superfinal champion once more", "ChessNetwork", "computers-engines|history|stream-highlights", "TCEC / engines"),
+  v("tcec-sf-lc0-jozarov", "JbQYGhVnLuw", "Stockfish 17 vs Leela — TCEC Season 17 Cup Finals", "Jozarov", "computers-engines|openings|middlegame", "TCEC / engines"),
+  v("wc-2024-g1-dk", "QCubY-cNwRg", "Gukesh vs Ding Liren — WCC 2024 Game 1", "PowerPlayChess", "world-championship|openings|middlegame", "World Championship 2024"),
+  v("hp-caro-hennig", "LcrKZwejRmM", "Caro-Kann: von Hennig Gambit — traps & refutation", "Hanging Pawns", "openings|traps|strategy", "Hanging Pawns"),
+  v("open-italian-smirnov-20", "MhNs8GLo894", "Learn the Italian Game in 20 Minutes [crash course]", "Remote Chess Academy", "openings|beginner|strategy", "Italian / Giuoco"),
+  v("open-italian-smirnov-all", "qUews8fEGkc", "Italian Game — all variations explained", "Remote Chess Academy", "openings|opening-series|traps", "Italian / Giuoco"),
+  v("open-italian-hp-basics", "dP4qtaUAhWM", "Italian Game — basics & common variations", "Hanging Pawns", "openings|beginner|strategy", "Italian / Giuoco"),
+  v("open-italian-variations", "6ACqk117Q7U", "Learn the Italian Game — variations, traps, plans", "Remote Chess Academy", "openings|traps|middlegame", "Italian / Giuoco"),
+  v("open-anti-italian-tricky", "LUapeBO8i2E", "Counter the Italian with this tricky opening", "Remote Chess Academy", "openings|traps|strategy", "Anti-Italian"),
+];

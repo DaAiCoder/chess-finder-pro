@@ -1,0 +1,246 @@
+/**
+ * Hand-curated seed of ~120 popular named openings.
+ *
+ * Used by `openingsDictionary.ts` as a fallback when the full Lichess TSV
+ * dataset has not been vendored under `server/data/openings/*.tsv`. The
+ * curated list covers everything the average user types ("Italian Game",
+ * "Sicilian Najdorf", "Blackmar-Diemer Gambit", …) so the Pattern Finder
+ * works on a fresh checkout without any data download step.
+ *
+ * Run `npm run fetch:openings` to vendor the full 3500-entry dictionary
+ * (https://github.com/lichess-org/chess-openings) which the loader will
+ * merge on top of these seeds.
+ *
+ * Each row: { id, name, eco, aliases, prefixSan }
+ *   - `id` is kebab-case, stable across runs (used for cache keys).
+ *   - `prefixSan` is the standard SAN move list from the initial position.
+ *   - `aliases` is a small set of common informal spellings; the
+ *     dictionary builds a substring index on names + aliases.
+ */
+
+export interface OpeningSeed {
+  id: string;
+  name: string;
+  eco: string;
+  aliases: string[];
+  prefixSan: string[];
+}
+
+export const OPENING_SEEDS: OpeningSeed[] = [
+  /* 1.e4 e5 — open games */
+  { id: "italian-game", name: "Italian Game", eco: "C50", aliases: ["italian"],
+    prefixSan: ["e4","e5","Nf3","Nc6","Bc4"] },
+  { id: "italian-giuoco-piano", name: "Italian Game, Giuoco Piano", eco: "C50", aliases: ["giuoco piano"],
+    prefixSan: ["e4","e5","Nf3","Nc6","Bc4","Bc5"] },
+  { id: "evans-gambit", name: "Evans Gambit", eco: "C51", aliases: ["evans"],
+    prefixSan: ["e4","e5","Nf3","Nc6","Bc4","Bc5","b4"] },
+  { id: "two-knights-defense", name: "Two Knights Defense", eco: "C55", aliases: ["two knights"],
+    prefixSan: ["e4","e5","Nf3","Nc6","Bc4","Nf6"] },
+  { id: "fried-liver-attack", name: "Fried Liver Attack", eco: "C57", aliases: ["fried liver"],
+    prefixSan: ["e4","e5","Nf3","Nc6","Bc4","Nf6","Ng5","d5","exd5","Nxd5","Nxf7"] },
+  { id: "ruy-lopez", name: "Ruy Lopez", eco: "C60", aliases: ["spanish","spanish opening"],
+    prefixSan: ["e4","e5","Nf3","Nc6","Bb5"] },
+  { id: "ruy-lopez-berlin", name: "Ruy Lopez, Berlin Defense", eco: "C65", aliases: ["berlin defense","berlin wall"],
+    prefixSan: ["e4","e5","Nf3","Nc6","Bb5","Nf6"] },
+  { id: "ruy-lopez-morphy", name: "Ruy Lopez, Morphy Defense", eco: "C70", aliases: ["morphy"],
+    prefixSan: ["e4","e5","Nf3","Nc6","Bb5","a6"] },
+  { id: "ruy-lopez-closed", name: "Ruy Lopez, Closed Defense", eco: "C84", aliases: ["closed ruy lopez"],
+    prefixSan: ["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6","O-O","Be7"] },
+  { id: "scotch-game", name: "Scotch Game", eco: "C45", aliases: ["scotch"],
+    prefixSan: ["e4","e5","Nf3","Nc6","d4"] },
+  { id: "scotch-gambit", name: "Scotch Gambit", eco: "C44", aliases: [],
+    prefixSan: ["e4","e5","Nf3","Nc6","d4","exd4","Bc4"] },
+  { id: "kings-gambit", name: "King's Gambit", eco: "C30", aliases: ["kings gambit","king gambit"],
+    prefixSan: ["e4","e5","f4"] },
+  { id: "vienna-game", name: "Vienna Game", eco: "C25", aliases: ["vienna"],
+    prefixSan: ["e4","e5","Nc3"] },
+  { id: "philidor-defense", name: "Philidor Defense", eco: "C41", aliases: ["philidor"],
+    prefixSan: ["e4","e5","Nf3","d6"] },
+  { id: "petrov-defense", name: "Petrov Defense", eco: "C42", aliases: ["petroff","russian defense"],
+    prefixSan: ["e4","e5","Nf3","Nf6"] },
+  { id: "four-knights-game", name: "Four Knights Game", eco: "C46", aliases: ["four knights"],
+    prefixSan: ["e4","e5","Nf3","Nc6","Nc3","Nf6"] },
+
+  /* 1.e4 c5 — Sicilian */
+  { id: "sicilian-defense", name: "Sicilian Defense", eco: "B20", aliases: ["sicilian"],
+    prefixSan: ["e4","c5"] },
+  { id: "sicilian-najdorf", name: "Sicilian Najdorf", eco: "B90", aliases: ["najdorf"],
+    prefixSan: ["e4","c5","Nf3","d6","d4","cxd4","Nxd4","Nf6","Nc3","a6"] },
+  { id: "sicilian-dragon", name: "Sicilian Dragon", eco: "B70", aliases: ["dragon"],
+    prefixSan: ["e4","c5","Nf3","d6","d4","cxd4","Nxd4","Nf6","Nc3","g6"] },
+  { id: "sicilian-scheveningen", name: "Sicilian Scheveningen", eco: "B80", aliases: ["scheveningen"],
+    prefixSan: ["e4","c5","Nf3","d6","d4","cxd4","Nxd4","Nf6","Nc3","e6"] },
+  { id: "sicilian-sveshnikov", name: "Sicilian Sveshnikov", eco: "B33", aliases: ["sveshnikov"],
+    prefixSan: ["e4","c5","Nf3","Nc6","d4","cxd4","Nxd4","Nf6","Nc3","e5"] },
+  { id: "sicilian-taimanov", name: "Sicilian Taimanov", eco: "B40", aliases: ["taimanov"],
+    prefixSan: ["e4","c5","Nf3","e6","d4","cxd4","Nxd4","Nc6"] },
+  { id: "sicilian-kan", name: "Sicilian Kan", eco: "B41", aliases: ["kan"],
+    prefixSan: ["e4","c5","Nf3","e6","d4","cxd4","Nxd4","a6"] },
+  { id: "sicilian-classical", name: "Sicilian Classical", eco: "B56", aliases: [],
+    prefixSan: ["e4","c5","Nf3","d6","d4","cxd4","Nxd4","Nf6","Nc3","Nc6"] },
+  { id: "sicilian-accelerated-dragon", name: "Sicilian Accelerated Dragon", eco: "B34", aliases: ["accelerated dragon"],
+    prefixSan: ["e4","c5","Nf3","Nc6","d4","cxd4","Nxd4","g6"] },
+  { id: "sicilian-alapin", name: "Sicilian Alapin", eco: "B22", aliases: ["alapin","c3 sicilian"],
+    prefixSan: ["e4","c5","c3"] },
+  { id: "sicilian-rossolimo", name: "Sicilian Rossolimo", eco: "B30", aliases: ["rossolimo"],
+    prefixSan: ["e4","c5","Nf3","Nc6","Bb5"] },
+  { id: "sicilian-grand-prix", name: "Sicilian Grand Prix Attack", eco: "B23", aliases: ["grand prix"],
+    prefixSan: ["e4","c5","Nc3","Nc6","f4"] },
+  { id: "sicilian-closed", name: "Sicilian Closed", eco: "B23", aliases: ["closed sicilian"],
+    prefixSan: ["e4","c5","Nc3"] },
+
+  /* 1.e4 other */
+  { id: "french-defense", name: "French Defense", eco: "C00", aliases: ["french"],
+    prefixSan: ["e4","e6"] },
+  { id: "french-advance", name: "French Advance Variation", eco: "C02", aliases: ["french advance"],
+    prefixSan: ["e4","e6","d4","d5","e5"] },
+  { id: "french-tarrasch", name: "French Tarrasch", eco: "C03", aliases: [],
+    prefixSan: ["e4","e6","d4","d5","Nd2"] },
+  { id: "french-winawer", name: "French Winawer", eco: "C15", aliases: ["winawer"],
+    prefixSan: ["e4","e6","d4","d5","Nc3","Bb4"] },
+  { id: "caro-kann", name: "Caro-Kann Defense", eco: "B10", aliases: ["caro kann","caro-kann"],
+    prefixSan: ["e4","c6"] },
+  { id: "caro-kann-advance", name: "Caro-Kann Advance", eco: "B12", aliases: [],
+    prefixSan: ["e4","c6","d4","d5","e5"] },
+  { id: "caro-kann-classical", name: "Caro-Kann Classical", eco: "B18", aliases: [],
+    prefixSan: ["e4","c6","d4","d5","Nc3","dxe4","Nxe4","Bf5"] },
+  { id: "scandinavian-defense", name: "Scandinavian Defense", eco: "B01", aliases: ["scandinavian","center counter"],
+    prefixSan: ["e4","d5"] },
+  { id: "pirc-defense", name: "Pirc Defense", eco: "B07", aliases: ["pirc"],
+    prefixSan: ["e4","d6","d4","Nf6","Nc3","g6"] },
+  { id: "modern-defense", name: "Modern Defense", eco: "B06", aliases: ["modern"],
+    prefixSan: ["e4","g6"] },
+  { id: "alekhine-defense", name: "Alekhine Defense", eco: "B02", aliases: ["alekhine"],
+    prefixSan: ["e4","Nf6"] },
+  { id: "nimzowitsch-defense", name: "Nimzowitsch Defense", eco: "B00", aliases: [],
+    prefixSan: ["e4","Nc6"] },
+
+  /* 1.d4 d5 — closed games */
+  { id: "queens-gambit", name: "Queen's Gambit", eco: "D06", aliases: ["queens gambit","qg"],
+    prefixSan: ["d4","d5","c4"] },
+  { id: "queens-gambit-accepted", name: "Queen's Gambit Accepted", eco: "D20", aliases: ["qga"],
+    prefixSan: ["d4","d5","c4","dxc4"] },
+  { id: "queens-gambit-declined", name: "Queen's Gambit Declined", eco: "D30", aliases: ["qgd"],
+    prefixSan: ["d4","d5","c4","e6"] },
+  { id: "slav-defense", name: "Slav Defense", eco: "D10", aliases: ["slav"],
+    prefixSan: ["d4","d5","c4","c6"] },
+  { id: "semi-slav-defense", name: "Semi-Slav Defense", eco: "D43", aliases: ["semi slav"],
+    prefixSan: ["d4","d5","c4","c6","Nc3","Nf6","Nf3","e6"] },
+  { id: "queens-gambit-tarrasch", name: "Tarrasch Defense", eco: "D32", aliases: ["tarrasch"],
+    prefixSan: ["d4","d5","c4","e6","Nc3","c5"] },
+  { id: "chigorin-defense", name: "Chigorin Defense", eco: "D07", aliases: ["chigorin"],
+    prefixSan: ["d4","d5","c4","Nc6"] },
+  { id: "albin-counter-gambit", name: "Albin Counter-Gambit", eco: "D08", aliases: ["albin"],
+    prefixSan: ["d4","d5","c4","e5"] },
+  { id: "blackmar-diemer-gambit", name: "Blackmar-Diemer Gambit", eco: "D00",
+    aliases: ["blackmar diemer","bdg","blackmar","blackmar-diemer"],
+    prefixSan: ["d4","d5","e4"] },
+  { id: "blackmar-diemer-accepted", name: "Blackmar-Diemer Gambit Accepted", eco: "D00",
+    aliases: ["bdg accepted"],
+    prefixSan: ["d4","d5","e4","dxe4","Nc3","Nf6","f3","exf3","Nxf3"] },
+  { id: "stonewall-attack", name: "Stonewall Attack", eco: "D00", aliases: ["stonewall"],
+    prefixSan: ["d4","d5","e3","Nf6","Bd3"] },
+  { id: "london-system", name: "London System", eco: "D02", aliases: ["london"],
+    prefixSan: ["d4","d5","Nf3","Nf6","Bf4"] },
+  { id: "colle-system", name: "Colle System", eco: "D04", aliases: ["colle"],
+    prefixSan: ["d4","d5","Nf3","Nf6","e3"] },
+  { id: "torre-attack", name: "Torre Attack", eco: "A46", aliases: ["torre"],
+    prefixSan: ["d4","Nf6","Nf3","e6","Bg5"] },
+  { id: "trompowsky-attack", name: "Trompowsky Attack", eco: "A45", aliases: ["trompowsky","tromp"],
+    prefixSan: ["d4","Nf6","Bg5"] },
+  { id: "veresov-attack", name: "Veresov Attack", eco: "D01", aliases: ["veresov"],
+    prefixSan: ["d4","d5","Nc3","Nf6","Bg5"] },
+
+  /* 1.d4 Nf6 — Indian defenses */
+  { id: "kings-indian-defense", name: "King's Indian Defense", eco: "E60",
+    aliases: ["kings indian","kid","king's indian"],
+    prefixSan: ["d4","Nf6","c4","g6","Nc3","Bg7"] },
+  { id: "kings-indian-classical", name: "King's Indian, Classical Variation", eco: "E91", aliases: [],
+    prefixSan: ["d4","Nf6","c4","g6","Nc3","Bg7","e4","d6","Nf3","O-O","Be2"] },
+  { id: "kings-indian-samisch", name: "King's Indian, Sämisch", eco: "E80", aliases: ["samisch"],
+    prefixSan: ["d4","Nf6","c4","g6","Nc3","Bg7","e4","d6","f3"] },
+  { id: "grunfeld-defense", name: "Grünfeld Defense", eco: "D80", aliases: ["grunfeld","grünfeld"],
+    prefixSan: ["d4","Nf6","c4","g6","Nc3","d5"] },
+  { id: "nimzo-indian-defense", name: "Nimzo-Indian Defense", eco: "E20",
+    aliases: ["nimzo indian","nimzo"],
+    prefixSan: ["d4","Nf6","c4","e6","Nc3","Bb4"] },
+  { id: "queens-indian-defense", name: "Queen's Indian Defense", eco: "E12",
+    aliases: ["queens indian","qid"],
+    prefixSan: ["d4","Nf6","c4","e6","Nf3","b6"] },
+  { id: "bogo-indian-defense", name: "Bogo-Indian Defense", eco: "E11", aliases: ["bogo indian"],
+    prefixSan: ["d4","Nf6","c4","e6","Nf3","Bb4+"] },
+  { id: "catalan-opening", name: "Catalan Opening", eco: "E00", aliases: ["catalan"],
+    prefixSan: ["d4","Nf6","c4","e6","g3"] },
+  { id: "benoni-defense", name: "Benoni Defense", eco: "A60", aliases: ["benoni"],
+    prefixSan: ["d4","Nf6","c4","c5","d5","e6"] },
+  { id: "modern-benoni", name: "Modern Benoni", eco: "A61", aliases: [],
+    prefixSan: ["d4","Nf6","c4","c5","d5","e6","Nc3","exd5","cxd5","d6"] },
+  { id: "benko-gambit", name: "Benko Gambit", eco: "A57", aliases: ["benko","volga gambit"],
+    prefixSan: ["d4","Nf6","c4","c5","d5","b5"] },
+  { id: "dutch-defense", name: "Dutch Defense", eco: "A80", aliases: ["dutch"],
+    prefixSan: ["d4","f5"] },
+  { id: "dutch-leningrad", name: "Dutch Leningrad", eco: "A87", aliases: ["leningrad"],
+    prefixSan: ["d4","f5","g3","Nf6","Bg2","g6"] },
+  { id: "dutch-stonewall", name: "Dutch Stonewall", eco: "A90", aliases: [],
+    prefixSan: ["d4","f5","g3","Nf6","Bg2","e6","Nf3","d5"] },
+
+  /* 1.c4 — English */
+  { id: "english-opening", name: "English Opening", eco: "A10", aliases: ["english"],
+    prefixSan: ["c4"] },
+  { id: "english-symmetrical", name: "English Symmetrical", eco: "A30", aliases: [],
+    prefixSan: ["c4","c5"] },
+  { id: "english-reversed-sicilian", name: "English Reversed Sicilian", eco: "A20", aliases: [],
+    prefixSan: ["c4","e5"] },
+
+  /* 1.Nf3 — flank systems */
+  { id: "reti-opening", name: "Réti Opening", eco: "A04", aliases: ["reti","réti"],
+    prefixSan: ["Nf3"] },
+  { id: "kings-indian-attack", name: "King's Indian Attack", eco: "A07", aliases: ["kia"],
+    prefixSan: ["Nf3","d5","g3"] },
+
+  /* 1.b3 / 1.b4 / 1.g3 — offbeat */
+  { id: "larsen-opening", name: "Larsen's Opening", eco: "A01", aliases: ["nimzo-larsen","larsen"],
+    prefixSan: ["b3"] },
+  { id: "sokolsky-opening", name: "Sokolsky Opening", eco: "A00", aliases: ["polish","orangutan"],
+    prefixSan: ["b4"] },
+  { id: "bird-opening", name: "Bird's Opening", eco: "A02", aliases: ["bird"],
+    prefixSan: ["f4"] },
+  { id: "from-gambit", name: "From Gambit", eco: "A02", aliases: ["from's gambit"],
+    prefixSan: ["f4","e5"] },
+
+  /* Common branches by surface name */
+  { id: "smith-morra-gambit", name: "Smith-Morra Gambit", eco: "B21",
+    aliases: ["smith morra","morra gambit"],
+    prefixSan: ["e4","c5","d4","cxd4","c3"] },
+  { id: "kings-gambit-accepted", name: "King's Gambit Accepted", eco: "C33",
+    aliases: ["kga"],
+    prefixSan: ["e4","e5","f4","exf4"] },
+  { id: "queens-gambit-slav-exchange", name: "Slav Exchange Variation", eco: "D13",
+    aliases: ["slav exchange"],
+    prefixSan: ["d4","d5","c4","c6","cxd5","cxd5"] },
+  { id: "kings-indian-fianchetto", name: "King's Indian, Fianchetto", eco: "E60",
+    aliases: ["fianchetto kid"],
+    prefixSan: ["d4","Nf6","c4","g6","Nf3","Bg7","g3"] },
+
+  /* Hyper-popular tricky / trap openings users will type by name */
+  { id: "englund-gambit", name: "Englund Gambit", eco: "A40", aliases: ["englund"],
+    prefixSan: ["d4","e5"] },
+  { id: "budapest-gambit", name: "Budapest Gambit", eco: "A51", aliases: ["budapest"],
+    prefixSan: ["d4","Nf6","c4","e5"] },
+  { id: "old-indian-defense", name: "Old Indian Defense", eco: "A53", aliases: ["old indian"],
+    prefixSan: ["d4","Nf6","c4","d6"] },
+  { id: "wade-defense", name: "Wade Defense", eco: "B07", aliases: ["wade"],
+    prefixSan: ["d4","Nf6","Nf3","Bg4"] },
+  { id: "owen-defense", name: "Owen's Defense", eco: "B00", aliases: ["owen"],
+    prefixSan: ["e4","b6"] },
+  { id: "st-george-defense", name: "St. George Defense", eco: "B00", aliases: ["st george"],
+    prefixSan: ["e4","a6"] },
+  { id: "latvian-gambit", name: "Latvian Gambit", eco: "C40", aliases: ["latvian"],
+    prefixSan: ["e4","e5","Nf3","f5"] },
+  { id: "elephant-gambit", name: "Elephant Gambit", eco: "C40", aliases: ["elephant"],
+    prefixSan: ["e4","e5","Nf3","d5"] },
+  { id: "danish-gambit", name: "Danish Gambit", eco: "C21", aliases: ["danish"],
+    prefixSan: ["e4","e5","d4","exd4","c3"] },
+  { id: "center-game", name: "Center Game", eco: "C22", aliases: [],
+    prefixSan: ["e4","e5","d4","exd4","Qxd4"] },
+];

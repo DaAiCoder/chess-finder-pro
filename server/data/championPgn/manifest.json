@@ -1,0 +1,28 @@
+{
+  "_comment": "Maps champion id (see server/data/champions.ts) to the PGN Mentor download filename. The fetch script downloads https://www.pgnmentor.com/players/<file> and writes server/data/championPgn/<id>.pgn. Champions without a corresponding PGN Mentor file should be omitted; the API returns an empty library for them.",
+  "_source": "https://www.pgnmentor.com/files.html",
+  "_updated": "2026-01",
+  "champions": {
+    "morphy": "Morphy.zip",
+    "steinitz": "Steinitz.zip",
+    "lasker": "Lasker.zip",
+    "capablanca": "Capablanca.zip",
+    "alekhine": "Alekhine.zip",
+    "nimzowitsch": "Nimzowitsch.zip",
+    "botvinnik": "Botvinnik.zip",
+    "smyslov": "Smyslov.zip",
+    "tal": "Tal.zip",
+    "petrosian": "Petrosian.zip",
+    "spassky": "Spassky.zip",
+    "fischer": "Fischer.zip",
+    "karpov": "Karpov.zip",
+    "kasparov": "Kasparov.zip",
+    "kramnik": "Kramnik.zip",
+    "anand": "Anand.zip",
+    "carlsen": "Carlsen.zip",
+    "ding": "Ding.zip",
+    "gukesh": "Gukesh.zip",
+    "nakamura": "Nakamura.zip",
+    "caruana": "Caruana.zip"
+  }
+}

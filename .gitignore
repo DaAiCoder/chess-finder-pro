@@ -4,8 +4,9 @@ migrations/
 vendor/
 # Bundled PGN Mentor collections — fetched on demand via `npm run fetch:pgn-mentor`.
 server/data/championPgn/*.pgn
-# Persisted in-memory storage snapshot (games / analyses / training progress).
-data/
+# Persisted in-memory storage snapshot at repo root only (games / analyses / training).
+# Use leading slash so `client/src/data/…` is not ignored (e.g. Chess Tube catalog).
+/data/
 .env
 .env.local
 .env.*.local

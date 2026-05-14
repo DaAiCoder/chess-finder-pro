@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 220 15% 8%;
+  --foreground: 210 20% 98%;
+  --card: 220 20% 12%;
+  --card-foreground: 210 20% 98%;
+  --popover: 220 20% 12%;
+  --popover-foreground: 210 20% 98%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 15% 20%;
+  --secondary-foreground: 210 20% 98%;
+  --muted: 220 15% 15%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 142 71% 45%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --border: 220 15% 20%;
+  --input: 220 15% 20%;
+  --ring: 217 91% 60%;
+  --chart-1: 142 71% 45%;
+  --chart-2: 217 91% 60%;
+  --chart-3: 48 96% 53%;
+  --chart-4: 0 84% 60%;
+  --chart-5: 280 65% 60%;
+  --radius: 0.5rem;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============ Chessground board themes ============ */
+
+/* Default app board: chess.com green */
+.cg-wrap.app-green cg-board square.light {
+  background-color: #eeeed2;
+}
+.cg-wrap.app-green cg-board square.dark {
+  background-color: #769656;
+}
+
+/* Play page board: ChessFish wood */
+.cg-wrap.app-wood cg-board square.light {
+  background-color: #f0d9b5;
+}
+.cg-wrap.app-wood cg-board square.dark {
+  background-color: #b58863;
+}
+
+/* Brown variant — lichess "brown" look. */
+.cg-wrap.app-brown cg-board square.light {
+  background-color: #f0d9b5;
+}
+.cg-wrap.app-brown cg-board square.dark {
+  background-color: #946f51;
+}
+
+/* Blue variant — chess.com "blue" look. */
+.cg-wrap.app-blue cg-board square.light {
+  background-color: #dee3e6;
+}
+.cg-wrap.app-blue cg-board square.dark {
+  background-color: #788a94;
+}
+
+/* Gray / monochrome — distraction-free study board. */
+.cg-wrap.app-gray cg-board square.light {
+  background-color: #e5e7eb;
+}
+.cg-wrap.app-gray cg-board square.dark {
+  background-color: #6b7280;
+}
+
+/* Last-move highlight (orange) on every wood-family board. */
+.cg-wrap.app-wood cg-board square.last-move,
+.cg-wrap.app-brown cg-board square.last-move {
+  background-color: rgba(255, 140, 0, 0.5) !important;
+}
+
+.cg-wrap {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: block;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+cg-container {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Make sure chessground rectangles square up inside flex parents. */
+.board-aspect {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+/* Sidebar / nav helpers */
+.nav-link-active {
+  background-color: rgba(118, 150, 86, 0.2);
+  color: hsl(var(--primary));
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--secondary));
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}

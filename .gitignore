@@ -1,0 +1,15 @@
+node_modules/
+dist/
+migrations/
+vendor/
+# Bundled PGN Mentor collections — fetched on demand via `npm run fetch:pgn-mentor`.
+server/data/championPgn/*.pgn
+# Persisted in-memory storage snapshot (games / analyses / training progress).
+data/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.vscode/
+.idea/

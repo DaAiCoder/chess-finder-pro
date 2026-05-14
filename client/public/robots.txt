@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /account/
+Disallow: /thanks
+Disallow: /watch/render
+Disallow: /watch/export
+
+# Crawl-delay is non-standard but respected by Bing/Yandex; well-behaved
+# bots will use it to avoid hammering training endpoints.
+Crawl-delay: 5
+
+# Replace the host below with your production origin before deploying.
+Sitemap: https://chessfinderpro.com/sitemap.xml

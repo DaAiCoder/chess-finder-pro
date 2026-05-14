@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#769656" />
+
+    <!-- Primary SEO -->
+    <title>Chess Finder Pro — AI coach, deep analysis, and 15+ trainers</title>
+    <meta
+      name="description"
+      content="Train smarter with Chess Finder Pro. Ask Tal — an AI coach in the voice of any world champion — plus deep game analysis, blind tactics, opponent prep, and over 15 specialty trainers. Free to try, $12.99/mo or $79/yr."
+    />
+    <meta name="robots" content="index,follow" />
+
+    <!-- Favicon: inline SVG knight; replace with /favicon.ico + /og.png at launch. -->
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23769656'/><text x='50' y='65' font-size='60' text-anchor='middle' fill='white' font-family='Arial'>%E2%99%9E</text></svg>"
+    />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Chess Finder Pro" />
+    <meta
+      property="og:title"
+      content="Chess Finder Pro — AI coach, deep analysis, and 15+ trainers"
+    />
+    <meta
+      property="og:description"
+      content="Ask Tal — an AI coach in the voice of any world champion — plus deep game analysis, blind tactics, opponent prep, and over 15 specialty trainers."
+    />
+    <meta property="og:image" content="/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter / X card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Chess Finder Pro" />
+    <meta
+      name="twitter:description"
+      content="Ask Tal, deep analysis, blind tactics, opponent prep, and 15+ specialty trainers. Free to try."
+    />
+    <meta name="twitter:image" content="/og.png" />
+
+    <!--
+      Google Tag (gtag.js) with Consent Mode v2.
+      All consent signals default to "denied" so nothing fires until the
+      visitor opts in via the cookie banner (see
+      client/src/components/ConsentBanner.tsx + client/src/lib/analytics.ts).
+      The tag script itself is only injected when VITE_GA4_MEASUREMENT_ID is
+      configured at build time — open-source forks without analytics keys
+      get a no-op shim.
+    -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        window.dataLayer.push(arguments);
+      }
+      window.gtag = gtag;
+      gtag("consent", "default", {
+        ad_storage: "denied",
+        analytics_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+        wait_for_update: 500,
+      });
+      gtag("js", new Date());
+    </script>
+    <script type="module">
+      const ga4 = (import.meta.env && import.meta.env.VITE_GA4_MEASUREMENT_ID) || "";
+      const ads = (import.meta.env && import.meta.env.VITE_GOOGLE_ADS_ID) || "";
+      const loaderId = ga4 || ads;
+      if (loaderId) {
+        const s = document.createElement("script");
+        s.async = true;
+        s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(loaderId);
+        document.head.appendChild(s);
+        if (ga4) window.gtag("config", ga4, { send_page_view: false });
+        if (ads) window.gtag("config", ads);
+      }
+    </script>
+  </head>
+  <body class="bg-background text-foreground antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

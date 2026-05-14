@@ -1,0 +1,496 @@
+OK 39 / 99
+
+--- positions filtered out ---
+  no-mate  Anastasia's Mate  fen=R7/4N1pk/8/8/8/8/8/6K1 w - - 0 1
+  no-mate  Arabian Mate (queenside)  fen=k7/8/2N1K3/8/8/8/8/7R w - - 0 1
+  opponent-already-in-check  Vukovic's Mate (variant)  fen=5k2/8/5KN1/7R/8/8/8/8 w - - 0 1
+  opponent-already-in-check  Two Bishops Mate  fen=k7/2K5/2B5/8/4B3/8/8/8 w - - 0 1
+  no-mate  Two Bishops Mate  fen=k7/2K5/3B4/4B3/8/8/8/8 w - - 0 1
+  opponent-already-in-check  Ladder Mate (Q + R)  fen=k7/8/Q7/1R6/8/8/8/6K1 w - - 0 1
+  opponent-already-in-check  Queen Mate (Edge)  fen=8/3k4/3KQ3/8/8/8/8/8 w - - 0 1
+  no-mate  Queen Mate (Edge)  fen=8/8/8/3k4/8/3K4/3Q4/8 w - - 0 1
+  no-mate  Rook Mate (Edge)  fen=4k3/8/4K3/8/8/8/8/4R3 w - - 0 1
+  opponent-already-in-check  Rook Mate (Edge)  fen=8/8/8/8/3k4/3K4/8/3R4 b - - 0 1
+  opponent-already-in-check  Epaulette Mate  fen=r2k1r2/3Q4/3K4/8/8/8/8/8 w - - 0 1
+  no-mate  Promotion Mate (Knight)  fen=1q6/3P4/1K1k4/8/8/8/8/8 w - - 0 1
+  opponent-already-in-check  Queen + Knight Mate  fen=5rk1/4Np1p/8/8/8/8/8/4Q2K w - - 0 1
+  no-mate  Knight + Rook Mate  fen=6k1/5Npp/8/8/8/8/8/4R1K1 w - - 0 1
+  opponent-already-in-check  Pawn-Supported Queen Mate  fen=7k/5p1Q/5P2/8/8/8/8/6K1 w - - 0 1
+  opponent-already-in-check  Anderssen's Mate  fen=7k/6P1/7K/8/8/8/8/R7 w - - 0 1
+  opponent-already-in-check  Hook Mate  fen=5R1k/5Npp/6P1/8/8/8/8/6K1 w - - 0 1
+  opponent-already-in-check  Knight Rim Mate  fen=5k2/5R2/4N3/4K3/8/8/8/8 w - - 0 1
+  opponent-already-in-check  Knight + King Box  fen=k7/2K5/8/2N5/8/8/8/R7 w - - 0 1
+  opponent-already-in-check  Two Rooks Mate  fen=k7/8/2K5/8/8/8/R7/2R5 w - - 0 1
+  no-mate  Bishop Sacrifice Mate  fen=6k1/5p1p/6p1/8/8/4B3/8/3R2K1 w - - 0 1
+  opponent-already-in-check  Pillsbury's Mate  fen=6k1/6p1/8/8/8/8/B7/4R1K1 w - - 0 1
+  no-mate  Long Diagonal Mate  fen=6k1/8/8/8/B7/8/8/3R2K1 w - - 0 1
+  no-mate  Bishop + Knight Mate  fen=8/8/3K4/8/3N4/8/B7/k7 w - - 0 1
+  no-mate  Mayet's Mate  fen=8/8/8/3k4/8/3K4/3B4/3R4 w - - 0 1
+  no-mate  Bishop + Knight Mate (variant)  fen=8/8/8/8/3K4/3N4/3B4/k7 w - - 0 1
+  no-mate  Capablanca Q+K Mate  fen=8/8/3K4/3Q4/8/3k4/8/8 b - - 0 1
+  no-mate  Discovered Check Mate  fen=6k1/5pPp/8/8/8/8/8/6KR w - - 0 1
+  opponent-already-in-check  Pawn Promotion Mate  fen=1k6/P1K5/8/8/8/8/8/8 w - - 0 1
+  no-mate  Boden's Mate  fen=1k1r4/2p5/p7/8/8/2B5/8/2B3K1 w - - 0 1
+  opponent-already-in-check  Greco's Mate  fen=6rk/5p2/8/4B3/8/8/7P/6KQ w - - 0 1
+  no-mate  Queen Lift Mate  fen=7k/8/5K2/8/8/8/8/Q7 w - - 0 1
+  opponent-already-in-check  Queen Lift Mate  fen=k7/2K5/8/8/8/8/8/Q7 w - - 0 1
+  opponent-already-in-check  Queen Lift Mate  fen=k7/2K5/8/8/8/8/Q7/8 w - - 0 1
+  opponent-already-in-check  Rook Lift Mate  fen=7k/6K1/8/8/8/8/R7/8 w - - 0 1
+  opponent-already-in-check  Promotion Mate  fen=6k1/5P2/6K1/8/8/8/8/8 w - - 0 1
+  opponent-already-in-check  Long Diagonal Queen Mate  fen=7k/5K2/8/8/8/8/8/Q7 w - - 0 1
+  opponent-already-in-check  Knight + Queen Mate  fen=7k/5N2/6K1/8/8/8/8/Q7 w - - 0 1
+  no-mate  Capablanca Q+K Mate  fen=8/8/3k4/8/3K4/8/8/3Q4 w - - 0 1
+  no-mate  Capablanca Q+K Mate  fen=8/8/4k3/8/4K3/8/4Q3/8 w - - 0 1
+  no-mate  Two Bishops Mate  fen=7k/8/5K2/8/8/8/B7/7B w - - 0 1
+  no-mate  Promotion Mate (Bishop discovers)  fen=8/3P4/8/8/8/8/8/k1K4B w - - 0 1
+  no-mate  King's Field Mate  fen=8/8/8/8/8/4k3/5p2/5K2 b - - 0 1
+  opponent-already-in-check  Queen Swing Mate  fen=k7/8/2K5/8/8/8/8/Q7 w - - 0 1
+  no-mate  Queen Swing Mate  fen=k7/8/2K5/8/8/8/8/4Q3 w - - 0 1
+  opponent-already-in-check  Queen Swing Mate  fen=7k/8/6K1/8/8/8/8/Q7 w - - 0 1
+  no-mate  Rook + King Mate  fen=7k/8/5K2/8/8/8/R7/8 w - - 0 1
+  opponent-already-in-check  Rook + King Mate  fen=k7/8/2K5/8/8/8/R7/8 w - - 0 1
+  opponent-already-in-check  Rook + King Mate  fen=k7/8/2K5/8/8/8/8/R7 w - - 0 1
+  no-mate  Rook + King Mate (centre)  fen=8/8/3k4/8/8/3K4/8/3R4 w - - 0 1
+  opponent-already-in-check  Promotion Mate  fen=5k2/4P3/4K3/8/8/8/8/8 w - - 0 1
+  no-mate  Promotion Mate  fen=3k4/3P4/3K4/8/8/8/8/8 w - - 0 1
+  opponent-already-in-check  Promotion Mate  fen=1k6/2P5/1K6/8/8/8/8/8 w - - 0 1
+  opponent-already-in-check  Promotion Mate (Knight)  fen=1q5k/3P2K1/8/8/8/8/8/8 w - - 0 1
+  opponent-already-in-check  Central Q Mate  fen=8/8/5k2/4Q3/8/4K3/8/8 w - - 0 1
+  opponent-already-in-check  Central R Mate  fen=8/8/3k4/3R4/8/3K4/8/8 w - - 0 1
+  opponent-already-in-check  Knight Rim Mate  fen=5k2/8/4NK2/7R/8/8/8/8 w - - 0 1
+  no-mate  Q + B Mate  fen=7k/6p1/8/8/B7/8/8/Q5K1 w - - 0 1
+  no-mate  B + R Mate  fen=6k1/8/B7/8/8/8/8/3R2K1 w - - 0 1
+  no-mate  Smothered Mate (extra defender)  fen=1n4rk/5Npp/8/8/8/8/8/6K1 b - - 0 1
+
+--- TS seed snippets ---
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1",
+    solution: ["Ra8#"],
+    difficulty: 1,
+    themes: ["back-rank","rook"],
+    tacticType: "Back Rank Mate",
+    explanation:
+      "Classical back-rank mate ??? the king is trapped behind its own pawns.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5ppp/8/8/8/8/8/1R4K1 w - - 0 1",
+    solution: ["Rb8#"],
+    difficulty: 1,
+    themes: ["back-rank","rook"],
+    tacticType: "Back Rank Mate",
+    explanation:
+      "Same back-rank coffin from the b-file.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5ppp/8/8/8/8/8/2R3K1 w - - 0 1",
+    solution: ["Rc8#"],
+    difficulty: 1,
+    themes: ["back-rank","rook"],
+    tacticType: "Back Rank Mate",
+    explanation:
+      "Back-rank mate from the c-file.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5ppp/8/8/8/8/8/3R2K1 w - - 0 1",
+    solution: ["Rd8#"],
+    difficulty: 1,
+    themes: ["back-rank","rook"],
+    tacticType: "Back Rank Mate",
+    explanation:
+      "Back-rank mate from the d-file.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5ppp/8/8/8/8/Q4PPP/6K1 w - - 0 1",
+    solution: ["Qa8#"],
+    difficulty: 2,
+    themes: ["back-rank","queen"],
+    tacticType: "Back Rank Mate (Queen)",
+    explanation:
+      "Queen replaces the rook ??? same corridor mate.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5ppp/8/8/8/8/4QPPP/6K1 w - - 0 1",
+    solution: ["Qe8#"],
+    difficulty: 2,
+    themes: ["back-rank","queen"],
+    tacticType: "Back Rank Mate (Queen)",
+    explanation:
+      "Queen mate on the back rank from the e-file.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5ppp/8/8/8/8/3Q1PPP/6K1 w - - 0 1",
+    solution: ["Qd8#"],
+    difficulty: 2,
+    themes: ["back-rank","queen"],
+    tacticType: "Back Rank Mate (Queen)",
+    explanation:
+      "Central queen lifts to deliver back-rank mate.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5ppp/8/8/8/8/3B3P/R5K1 w - - 0 1",
+    solution: ["Ra8#"],
+    difficulty: 2,
+    themes: ["back-rank","rook","bishop"],
+    tacticType: "Back Rank Mate (Bishop)",
+    explanation:
+      "Extra bishop is irrelevant ??? back-rank mate stands.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6rk/6pp/7N/8/8/8/8/6K1 w - - 0 1",
+    solution: ["Nf7#"],
+    difficulty: 2,
+    themes: ["smothered","knight"],
+    tacticType: "Smothered Mate",
+    explanation:
+      "Smothered Mate ??? king sealed by its own pieces; knight delivers from f7.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6rk/6pp/8/6N1/8/8/8/6K1 w - - 0 1",
+    solution: ["Nf7#"],
+    difficulty: 3,
+    themes: ["smothered","knight"],
+    tacticType: "Smothered Mate (knight on g5)",
+    explanation:
+      "Knight on g5 jumps to f7 to deliver the smothered mate.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6rk/6pp/3N4/8/8/8/8/6K1 w - - 0 1",
+    solution: ["Nf7#"],
+    difficulty: 3,
+    themes: ["smothered","knight"],
+    tacticType: "Smothered Mate (knight on d6)",
+    explanation:
+      "Knight from d6 hops to f7 ??? king cannot escape.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "3N2rk/6pp/8/8/8/8/8/6K1 w - - 0 1",
+    solution: ["Nf7#"],
+    difficulty: 3,
+    themes: ["smothered","knight"],
+    tacticType: "Smothered Mate (knight on d8)",
+    explanation:
+      "Knight on d8 swings to f7 to seal the smother.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "8/4N1pk/8/8/8/R7/8/6K1 w - - 0 1",
+    solution: ["Rh3#"],
+    difficulty: 3,
+    themes: ["anastasia","knight","rook"],
+    tacticType: "Anastasia's Mate",
+    explanation:
+      "Anastasia's Mate ??? knight covers g6/g8, rook lifts to the h-file.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "7k/8/5N1K/8/8/8/8/R7 w - - 0 1",
+    solution: ["Ra8#"],
+    difficulty: 3,
+    themes: ["arabian","rook","knight"],
+    tacticType: "Arabian Mate",
+    explanation:
+      "Arabian ??? knight covers g8/h7 from f6, king blocks g7, rook swings to h-file.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "5k2/5N2/5K2/7R/8/8/8/8 w - - 0 1",
+    solution: ["Rh8#"],
+    difficulty: 3,
+    themes: ["vukovic","rook","knight"],
+    tacticType: "Vukovic's Mate",
+    explanation:
+      "Vukovic's Mate ??? knight + king cover all escape squares; rook delivers from the side.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "7k/R7/1R6/8/8/8/8/6K1 w - - 0 1",
+    solution: ["Rb8#"],
+    difficulty: 1,
+    themes: ["ladder","two-rooks"],
+    tacticType: "Ladder Mate (two rooks)",
+    explanation:
+      "Two-rook lawnmower ??? rook seals the back rank with the partner cutting off escape.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "7k/R7/6Q1/8/8/8/8/6K1 w - - 0 1",
+    solution: ["Ra8#"],
+    difficulty: 1,
+    themes: ["ladder","queen","rook"],
+    tacticType: "Ladder Mate (Q + R)",
+    explanation:
+      "Queen and rook combine on the back rank.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "7k/5K2/6Q1/8/8/8/8/8 w - - 0 1",
+    solution: ["Qg7#"],
+    difficulty: 2,
+    themes: ["queen-mate"],
+    tacticType: "Queen Mate (Edge)",
+    explanation:
+      "Queen mate on h8 ??? king's flight square covered by white king.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "7k/8/6K1/8/8/8/8/R7 w - - 0 1",
+    solution: ["Ra8#"],
+    difficulty: 2,
+    themes: ["rook-mate"],
+    tacticType: "Rook Mate (Edge)",
+    explanation:
+      "Rook + king mate on the rim ??? king cuts off h7 escape.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "k7/8/1K6/8/8/8/8/7R w - - 0 1",
+    solution: ["Rh8#"],
+    difficulty: 2,
+    themes: ["rook-mate"],
+    tacticType: "Rook Mate (Edge)",
+    explanation:
+      "Rook delivers on the back rank ??? king covers escape squares.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/4P3/6K1/8/8/8/8/8 w - - 0 1",
+    solution: ["e8=R#"],
+    difficulty: 3,
+    themes: ["promotion","queen"],
+    tacticType: "Promotion Mate (Queen)",
+    explanation:
+      "Pawn promotes to queen ??? king on g6 covers all escape squares.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5ppp/8/8/8/8/8/Q3R1K1 w - - 0 1",
+    solution: ["Qa8#"],
+    difficulty: 2,
+    themes: ["queen","rook","battery"],
+    tacticType: "Heavy-Piece Battery",
+    explanation:
+      "Queen + rook battery on the back rank.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6rk/5ppp/8/6N1/8/8/8/6K1 w - - 0 1",
+    solution: ["Nxf7#"],
+    difficulty: 3,
+    themes: ["suffocation","knight"],
+    tacticType: "Suffocation Mate",
+    explanation:
+      "Suffocation Mate ??? knight checks; king's flight squares are all occupied by own pieces.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "5rk1/5pPp/7B/8/8/8/8/4Q2K w - - 0 1",
+    solution: ["gxf8=R#"],
+    difficulty: 5,
+    themes: ["damiano","bishop","queen"],
+    tacticType: "Damiano's Bishop Mate",
+    explanation:
+      "Damiano-style ??? queen and bishop combine behind the wedged g-pawn.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5pp1/7p/8/8/3B4/8/Q5K1 w - - 0 1",
+    solution: ["Qa8#"],
+    difficulty: 4,
+    themes: ["queen","bishop"],
+    tacticType: "Diagonal Q+B Mate",
+    explanation:
+      "Bishop pins escape diagonals; queen lands the killing blow.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/4Q1pp/8/8/8/8/8/6K1 w - - 0 1",
+    solution: ["Qe8#"],
+    difficulty: 3,
+    themes: ["queen","seventh-rank"],
+    tacticType: "Queen on 7th Mate",
+    explanation:
+      "Queen lands on the 7th next to the king ??? own pawns prevent escape.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "kr6/pp6/8/3N4/8/8/8/6K1 w - - 0 1",
+    solution: ["Nc7#"],
+    difficulty: 4,
+    themes: ["smothered","knight","queenside"],
+    tacticType: "Smothered Mate (queenside)",
+    explanation:
+      "Queenside smothered ??? knight from d5 hops to b6 with king fully blocked.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "7k/5K2/8/8/8/Q7/8/8 w - - 0 1",
+    solution: ["Qh3#"],
+    difficulty: 3,
+    themes: ["queen-mate","queen-lift"],
+    tacticType: "Queen Lift Mate",
+    explanation:
+      "Queen lifts along rank 3 to the h-file ??? king on f7 covers all flight squares.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "7k/8/6K1/8/8/8/R7/8 w - - 0 1",
+    solution: ["Ra8#"],
+    difficulty: 2,
+    themes: ["rook-mate","rook-lift"],
+    tacticType: "Rook Lift Mate",
+    explanation:
+      "Rook lifts up the a-file with king cutting off g7/g8.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "k7/8/1K6/8/8/8/8/2Q5 w - - 0 1",
+    solution: ["Qc8#"],
+    difficulty: 2,
+    themes: ["queen-mate","queen-lift"],
+    tacticType: "Queen Swing Mate",
+    explanation:
+      "Queen swings up the c-file to the back rank ??? supporting king covers b7/b8.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "7k/8/6K1/8/8/8/8/4Q3 w - - 0 1",
+    solution: ["Qe8#"],
+    difficulty: 2,
+    themes: ["queen-mate"],
+    tacticType: "Queen Swing Mate (h-file)",
+    explanation:
+      "Queen swings to the h-file with king covering g7/g8.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "7k/8/6K1/8/8/8/8/3Q4 w - - 0 1",
+    solution: ["Qd8#"],
+    difficulty: 2,
+    themes: ["queen-mate"],
+    tacticType: "Queen Swing Mate (h-file)",
+    explanation:
+      "Central queen swings right to deliver corner mate.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5N1p/7P/6K1/8/8/8/Q7 w - - 0 1",
+    solution: ["Qg7#"],
+    difficulty: 4,
+    themes: ["queen","knight","pawn"],
+    tacticType: "Q+N Coordination",
+    explanation:
+      "Knight + pawn cover escape; queen delivers from afar.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5ppp/8/8/8/8/1Q3PPP/6K1 w - - 0 1",
+    solution: ["Qb8#"],
+    difficulty: 2,
+    themes: ["back-rank","queen"],
+    tacticType: "Back Rank Mate (Queen)",
+    explanation:
+      "Queen to the b-file ??? back-rank mate.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5ppp/8/8/8/8/2Q2PPP/6K1 w - - 0 1",
+    solution: ["Qc8#"],
+    difficulty: 2,
+    themes: ["back-rank","queen"],
+    tacticType: "Back Rank Mate (Queen)",
+    explanation:
+      "Queen on c-file delivers back-rank mate.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5ppp/8/8/8/7Q/5PPP/6K1 w - - 0 1",
+    solution: ["Qc8#"],
+    difficulty: 3,
+    themes: ["back-rank","queen"],
+    tacticType: "Back Rank Mate (Long Queen)",
+    explanation:
+      "Long-range queen invasion ??? h-file queen swings into back rank.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5ppp/8/8/6Q1/8/5PPP/6K1 w - - 0 1",
+    solution: ["Qc8#"],
+    difficulty: 3,
+    themes: ["back-rank","queen"],
+    tacticType: "Back Rank Mate (Long Queen)",
+    explanation:
+      "Mid-board queen swings to back rank for mate.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "6k1/5ppp/8/8/8/8/R7/3Q2K1 w - - 0 1",
+    solution: ["Ra8#"],
+    difficulty: 3,
+    themes: ["queen","rook"],
+    tacticType: "Q + R Mate",
+    explanation:
+      "Queen swings to back rank ??? rook backs up.",
+    source: "seed",
+  },
+  {
+    module: "checkmate-patterns",
+    fen: "5rk1/8/4N3/8/8/8/8/Q5K1 w - - 0 1",
+    solution: ["Qg7#"],
+    difficulty: 3,
+    themes: ["queen","knight"],
+    tacticType: "Q + N Mate",
+    explanation:
+      "Knight covers f8 escape; queen swings to long diagonal.",
+    source: "seed",
+  },
+
+39 verified entries (after dedupe).

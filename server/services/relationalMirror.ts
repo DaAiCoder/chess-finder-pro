@@ -63,7 +63,7 @@ function getDb(): DrizzlePg | null {
 /**
  * Ensure mirrored tables exist. Idempotent. The Drizzle migration story
  * (`npm run db:push`) is the canonical schema migration tool; this is a
- * pragmatic fallback so the mirror works on a fresh Neon database
+ * pragmatic fallback so the mirror works on a fresh Postgres database
  * without separately running drizzle-kit.
  */
 export async function ensureRelationalTables(): Promise<void> {

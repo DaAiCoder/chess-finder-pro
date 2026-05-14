@@ -3,7 +3,6 @@
  * single JSONB row so restarts keep state without requiring a full relational
  * Drizzle port yet. Uses TCP Postgres via `postgres.js` (Render, Neon, local).
  */
-import postgres from "postgres";
 import { getPostgresSql } from "./pgClient.js";
 
 export function neonEnabled(): boolean {
@@ -35,10 +34,11 @@ export async function loadNeonSnapshot(): Promise<unknown | null> {
 export async function saveNeonSnapshot(payload: unknown): Promise<void> {
   const sql = getPostgresSql();
   if (!sql) return;
-  const json = JSON.parse(JSON.stringify(payload)) as postgres.JSONValue;
+  const json = JSON.parse(JSON.stringify(payload)) as unknown;
+  const text = JSON.stringify(json);
   await sql`
     INSERT INTO app_snapshot (id, payload, updated_at)
-    VALUES (1, ${sql.json(json)}, NOW())
+    VALUES (1, ${text}::jsonb, NOW())
     ON CONFLICT (id) DO UPDATE SET
       payload = EXCLUDED.payload,
       updated_at = NOW()

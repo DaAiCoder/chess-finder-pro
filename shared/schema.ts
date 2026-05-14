@@ -9,6 +9,7 @@ import {
   jsonb,
   varchar,
   date,
+  unique,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -67,6 +68,15 @@ export type InsertChessQuery = Omit<
   parsedCriteria?: unknown;
   results?: unknown;
 };
+
+/* ---------------------------------------------------------------------- */
+/* 2b. app_snapshot — full in-memory graph JSONB (server/neonSnapshot.ts) */
+/* ---------------------------------------------------------------------- */
+export const appSnapshot = pgTable("app_snapshot", {
+  id: integer("id").primaryKey().default(1),
+  payload: jsonb("payload").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
 
 /* ---------------------------------------------------------------------- */
 /* 3. chess_positions — FEN evaluation cache                              */
@@ -238,7 +248,8 @@ export const trainingAttempts = pgTable("training_attempts", {
   solved: boolean("solved").notNull(),
   timeSpent: integer("time_spent").notNull(),
   movesPlayed: jsonb("moves_played"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  /** DB column `attempted_at` (relational mirror + Drizzle introspection). */
+  createdAt: timestamp("attempted_at").defaultNow().notNull(),
 });
 export const insertTrainingAttemptSchema = createInsertSchema(trainingAttempts).omit({
   id: true,
@@ -299,6 +310,24 @@ export const userStreaks = pgTable("user_streaks", {
 export const insertUserStreakSchema = createInsertSchema(userStreaks).omit({ id: true });
 export type UserStreak = typeof userStreaks.$inferSelect;
 export type InsertUserStreak = z.infer<typeof insertUserStreakSchema>;
+
+/* ---------------------------------------------------------------------- */
+/* 12b. user_motif_skills — SQL mirror (server/services/relationalMirror) */
+/* ---------------------------------------------------------------------- */
+export const userMotifSkills = pgTable(
+  "user_motif_skills",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").notNull(),
+    motifKey: varchar("motif_key", { length: 48 }).notNull(),
+    rating: real("rating").notNull(),
+    rd: real("rd").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    correct: integer("correct").notNull().default(0),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [unique("user_motif_skills_user_id_motif_key_unique").on(t.userId, t.motifKey)],
+);
 
 /* ---------------------------------------------------------------------- */
 /* 13. motif_definitions                                                  */

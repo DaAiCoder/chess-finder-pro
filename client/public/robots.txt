@@ -11,5 +11,4 @@ Disallow: /watch/export
 # bots will use it to avoid hammering training endpoints.
 Crawl-delay: 5
 
-# Replace the host below with your production origin before deploying.
-Sitemap: https://chessfinderpro.com/sitemap.xml
+Sitemap: https://chessgm.co/sitemap.xml

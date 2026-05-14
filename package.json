@@ -10,6 +10,7 @@
     "start": "NODE_ENV=production node dist/server/index.js",
     "check": "tsc --noEmit",
     "db:push": "drizzle-kit push",
+    "db:push:production": "node scripts/ensure-database-url.mjs && drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "lint": "tsc --noEmit",

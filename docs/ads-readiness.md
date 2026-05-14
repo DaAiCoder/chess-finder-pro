@@ -136,14 +136,33 @@ Gmail and Outlook will route magic links to spam.
 
 ## 3. Google Analytics 4 + Google Ads
 
+### 3.0 Render / Vite (read this first on production)
+
+`VITE_*` variables are **inlined at client build time** by Vite. They are not
+read at runtime from the Node server process.
+
+1. In the Render **Web Service** (not the Postgres add-on): **Environment →
+   Environment Variables**, add:
+   - `VITE_GA4_MEASUREMENT_ID` = your `G-…` ID (optional but recommended).
+   - `VITE_GOOGLE_ADS_ID` = your `AW-…` ID (optional; for Ads conversions).
+   - `VITE_GOOGLE_ADS_CONVERSION_LABEL` = the label string from the Purchase
+     conversion action (required for Ads **only if** you set
+     `VITE_GOOGLE_ADS_ID`; omit both to skip Ads tagging).
+2. **Save**, then trigger a **new deploy** so `npm run build` runs again with
+   those values. A service restart alone is **not** enough.
+3. If tags still do not appear after setting vars: **Manual Deploy → Clear
+   build cache & deploy** (Render caches dependency/build layers).
+4. In the browser, open the site, click **Accept all** on the cookie banner,
+   then use Tag Assistant — events stay gated until consent (Consent Mode v2).
+
 ### 3.1 Create the GA4 property
 
 1. <https://analytics.google.com> → **Admin → Create → Property.**
 2. Name: "Chess Finder Pro". Time zone + currency to taste.
 3. After creation: **Data Streams → Web → Add stream.** URL = your
    production origin, Stream name = "Web".
-4. Copy the **Measurement ID** (`G-XXXXXXXX`) into `.env` as
-   `VITE_GA4_MEASUREMENT_ID`.
+4. Copy the **Measurement ID** (`G-XXXXXXXX`) into **Render env** (and local
+   `.env`) as `VITE_GA4_MEASUREMENT_ID`, then rebuild the client (see §3.0).
 
 The app already fires these GA4 events (gated by Consent Mode v2):
 
@@ -173,7 +192,8 @@ The app already fires these GA4 events (gated by Consent Mode v2):
    - Attribution model: Data-driven (default).
 4. Save. You'll get a **Conversion ID** (`AW-XXXXXXXXXX`) and a
    **Conversion label** (a short string).
-5. Paste into `.env`:
+5. Paste into **Render env** (and local `.env`) — still `VITE_` names — then
+   rebuild the client (see §3.0):
 
    ```
    VITE_GOOGLE_ADS_ID=AW-XXXXXXXXXX
@@ -252,6 +272,8 @@ The pages at `/legal/privacy`, `/legal/terms`, `/legal/refund`, and
 
 Before submitting your first Google Ads campaign for review, confirm:
 
+- [ ] `VITE_GA4_MEASUREMENT_ID` / Ads vars are set on **Render** and a **full
+      rebuild** completed after the last change (§3.0).
 - [ ] Stripe test mode end-to-end works: pick a plan, pay with
       `4242 4242 4242 4242`, land on `/thanks`, see "Welcome to Pro",
       open `/account/billing` and the Stripe portal launches.

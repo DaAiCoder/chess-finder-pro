@@ -70,15 +70,6 @@ export type InsertChessQuery = Omit<
 };
 
 /* ---------------------------------------------------------------------- */
-/* 2b. app_snapshot — full in-memory graph JSONB (server/neonSnapshot.ts) */
-/* ---------------------------------------------------------------------- */
-export const appSnapshot = pgTable("app_snapshot", {
-  id: integer("id").primaryKey().default(1),
-  payload: jsonb("payload").notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
-});
-
-/* ---------------------------------------------------------------------- */
 /* 3. chess_positions — FEN evaluation cache                              */
 /* ---------------------------------------------------------------------- */
 export const chessPositions = pgTable("chess_positions", {

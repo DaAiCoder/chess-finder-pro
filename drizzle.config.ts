@@ -54,11 +54,37 @@ function dbCredentials():
   };
 }
 
+/**
+ * Tables managed by `drizzle-kit push`. Omit `app_snapshot`: it is created by
+ * raw SQL in `server/neonSnapshot.ts` (CHECK id = 1, etc.); including it in the
+ * Drizzle schema caused Postgres 42P16 errors during push on Render.
+ */
+const TABLES_MANAGED_BY_DRIZZLE = [
+  "users",
+  "chess_queries",
+  "chess_positions",
+  "opening_lines",
+  "games",
+  "game_analysis",
+  "opponent_profiles",
+  "training_problems",
+  "training_attempts",
+  "training_progress",
+  "daily_challenges",
+  "user_streaks",
+  "user_motif_skills",
+  "motif_definitions",
+  "motif_instances",
+  "motif_metrics",
+  "motif_queries",
+] as const;
+
 export default defineConfig({
   out: "./migrations",
   schema: "./shared/schema.ts",
   dialect: "postgresql",
   /** Non-interactive / CI: fewer prompts during `drizzle-kit push` on Render. */
   strict: false,
+  tablesFilter: [...TABLES_MANAGED_BY_DRIZZLE],
   dbCredentials: dbCredentials(),
 });

@@ -104,7 +104,52 @@ async function main() {
     const indexPath = path.join(distClient, "index.html");
     const fs = await import("node:fs/promises");
     let cachedSpaHtml: string | null = null;
-    app.use(express.static(distClient, { index: false }));
+
+    try {
+      const assetsDir = path.join(distClient, "assets");
+      const [stIndex, stAssets] = await Promise.all([
+        fs.stat(indexPath).catch(() => null),
+        fs.stat(assetsDir).catch(() => null),
+      ]);
+      if (!stIndex?.isFile()) {
+        console.warn(`[static] missing ${indexPath} — run vite build before production.`);
+      } else if (!stAssets?.isDirectory()) {
+        console.warn(`[static] missing ${assetsDir} — run vite build before production.`);
+      }
+    } catch {
+      /* non-fatal */
+    }
+
+    app.use(
+      express.static(distClient, {
+        index: false,
+        setHeaders(res, filePath) {
+          const normalized = filePath.replace(/\\/g, "/");
+          if (normalized.includes("/assets/")) {
+            res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+          }
+        },
+      }),
+    );
+
+    // Without this, missing hashed chunks (stale cached index.html after a
+    // deploy) fall through to the SPA handler and return text/html — browsers
+    // then report MIME errors for dynamic import() module scripts.
+    app.use((req, res, next) => {
+      if (res.headersSent) return next();
+      if (req.method !== "GET" && req.method !== "HEAD") return next();
+      if (req.path.startsWith("/assets/")) {
+        res
+          .status(404)
+          .type("text/plain")
+          .send(
+            "Asset not found (likely stale HTML after a deploy). Hard-refresh: Ctrl+Shift+R or clear site data.",
+          );
+        return;
+      }
+      next();
+    });
+
     app.get("*", async (req, res, next) => {
       if (req.path.startsWith("/api")) return next();
       try {

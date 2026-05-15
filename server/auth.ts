@@ -58,6 +58,8 @@ declare module "express-session" {
     lichessState?: string;
     /** After OAuth / magic link, safe in-app path (must start with `/`). */
     authRedirectNext?: string;
+    /** Set by POST /api/operator/login when OPERATOR_DASHBOARD_* env is configured. */
+    operatorPortal?: boolean;
   }
 }
 

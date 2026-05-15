@@ -89,6 +89,16 @@ export function adminKeyOk(req: Request): boolean {
   return bearer === key || header === key;
 }
 
+/** Browser session after POST /api/operator/login (see `operatorPortal.ts`). */
+export function operatorPortalSessionOk(req: Request): boolean {
+  return req.session?.operatorPortal === true;
+}
+
+/** Admin APIs: Bearer `ADMIN_API_KEY` **or** operator portal session cookie. */
+export function adminOrOperatorPortalOk(req: Request): boolean {
+  return adminKeyOk(req) || operatorPortalSessionOk(req);
+}
+
 export function registerSitePricingRoutes(app: Express): void {
   app.get("/api/pricing", async (_req: Request, res: Response) => {
     try {
@@ -100,11 +110,11 @@ export function registerSitePricingRoutes(app: Express): void {
   });
 
   app.put("/api/admin/pricing", async (req: Request, res: Response) => {
-    if (!adminKeyOk(req)) {
+    if (!adminOrOperatorPortalOk(req)) {
       return res.status(401).json({
         error: "admin_unauthorized",
         message:
-          "Set ADMIN_API_KEY in the server environment and send it as Authorization: Bearer <key> or X-Admin-Key.",
+          "Sign in via operator login, or set ADMIN_API_KEY and send Authorization: Bearer <key> or X-Admin-Key.",
       });
     }
     try {

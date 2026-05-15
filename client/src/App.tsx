@@ -3,6 +3,7 @@ import { Switch, Route, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { OperatorAuthBoundary } from "@/components/admin/OperatorAuthBoundary";
 import { Toaster } from "@/components/ui/Toaster";
 import { isAdminHost } from "@/lib/adminHost";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -115,14 +116,16 @@ function AdminApp() {
     <QueryClientProvider client={queryClient}>
       <AnalyticsSync />
       <React.Suspense fallback={<PageFallback />}>
-        <AdminLayout>
-          <Switch>
-            <Route path="/" component={() => <Redirect to="/admin/site-analytics" />} />
-            <Route path="/admin/site-analytics" component={AdminSiteAnalytics} />
-            <Route path="/admin/pricing" component={AdminPricing} />
-            <Route component={NotFound} />
-          </Switch>
-        </AdminLayout>
+        <OperatorAuthBoundary mode="fullscreen">
+          <AdminLayout>
+            <Switch>
+              <Route path="/" component={() => <Redirect to="/admin/site-analytics" />} />
+              <Route path="/admin/site-analytics" component={AdminSiteAnalytics} />
+              <Route path="/admin/pricing" component={AdminPricing} />
+              <Route component={NotFound} />
+            </Switch>
+          </AdminLayout>
+        </OperatorAuthBoundary>
       </React.Suspense>
       <Toaster />
       <ConsentBanner />

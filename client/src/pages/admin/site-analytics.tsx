@@ -36,11 +36,12 @@ function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-async function adminJson<T>(path: string, adminKey: string): Promise<T> {
+async function adminJson<T>(path: string, adminKey: string | undefined): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (adminKey?.trim()) headers.Authorization = `Bearer ${adminKey.trim()}`;
   const res = await fetch(path, {
-    headers: {
-      Authorization: `Bearer ${adminKey.trim()}`,
-    },
+    headers,
+    credentials: "include",
   });
   const body = (await res.json().catch(() => ({}))) as T & { error?: string };
   if (!res.ok) {
@@ -50,10 +51,11 @@ async function adminJson<T>(path: string, adminKey: string): Promise<T> {
 }
 
 /**
- * First-party web analytics (page views + sessions). Uses the same
- * `ADMIN_API_KEY` as other operator tools; paste it for this session only.
+ * First-party web analytics (page views + sessions). Auth: operator session
+ * cookie and/or ADMIN_API_KEY (Bearer) on each request.
  */
 export default function AdminSiteAnalyticsPage() {
+  const [sessionOk, setSessionOk] = React.useState(false);
   const [adminKey, setAdminKey] = React.useState("");
   const [from, setFrom] = React.useState(() => isoDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)));
   const [to, setTo] = React.useState(() => isoDate(new Date()));
@@ -64,6 +66,19 @@ export default function AdminSiteAnalyticsPage() {
   const [err, setErr] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
 
+  React.useEffect(() => {
+    void fetch("/api/operator/session", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d: { ok?: boolean }) => setSessionOk(!!d.ok))
+      .catch(() => setSessionOk(false));
+  }, []);
+
+  React.useEffect(() => {
+    if (!sessionOk) return;
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial load after session only
+  }, [sessionOk]);
+
   const qs = React.useMemo(() => {
     const p = new URLSearchParams();
     p.set("from", new Date(from + "T00:00:00.000Z").toISOString());
@@ -73,13 +88,13 @@ export default function AdminSiteAnalyticsPage() {
 
   const load = async () => {
     setErr(null);
-    if (!adminKey.trim()) {
-      setErr("Enter ADMIN_API_KEY (same key as /admin/pricing).");
+    if (!sessionOk && !adminKey.trim()) {
+      setErr("Sign in with operator credentials, or enter ADMIN_API_KEY below.");
       return;
     }
     setLoading(true);
     try {
-      const key = adminKey.trim();
+      const key = adminKey.trim() || undefined;
       const [sum, pages, countries, rec] = await Promise.all([
         adminJson<SummaryResponse>(`/api/admin/analytics/summary?${qs}`, key),
         adminJson<{ items: TopRow[] }>(`/api/admin/analytics/top-pages?${qs}`, key),
@@ -127,14 +142,17 @@ export default function AdminSiteAnalyticsPage() {
             </div>
           </div>
           <div className="space-y-2 max-w-md">
-            <Label>Admin API key</Label>
+            <Label>Admin API key (optional)</Label>
             <Input
               type="password"
               autoComplete="off"
               value={adminKey}
               onChange={(e) => setAdminKey(e.target.value)}
-              placeholder="ADMIN_API_KEY"
+              placeholder={sessionOk ? "Session active — override with key if needed" : "ADMIN_API_KEY"}
             />
+            {sessionOk && (
+              <p className="text-[11px] text-muted-foreground">You are signed in as operator; key is optional.</p>
+            )}
           </div>
           {err && <p className="text-xs text-destructive">{err}</p>}
           <Button

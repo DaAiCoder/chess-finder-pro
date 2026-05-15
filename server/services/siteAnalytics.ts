@@ -6,7 +6,7 @@ import type { Express, Request, Response } from "express";
 import { z } from "zod";
 import geoip from "geoip-lite";
 import { getPostgresSql } from "../pgClient.js";
-import { adminKeyOk } from "./sitePricing.js";
+import { adminOrOperatorPortalOk } from "./sitePricing.js";
 import { adminPortalHostSet, operatorSubdomainMatchesPublicOrigin } from "../spaHtmlInject.js";
 
 const RATE_WINDOW_MS = 60_000;
@@ -176,6 +176,8 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
     const tMax = Math.max(...tsList);
     const startedAt = new Date(tMin);
     const lastSeenAt = new Date(tMax);
+    const startedIso = startedAt.toISOString();
+    const lastSeenIso = lastSeenAt.toISOString();
 
     try {
       await sql.begin(async (tx) => {
@@ -186,8 +188,8 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
           )
           VALUES (
             ${body.sessionId},
-            ${startedAt},
-            ${lastSeenAt},
+            ${startedIso},
+            ${lastSeenIso},
             ${body.anonymousId},
             ${userId},
             ${country},
@@ -215,7 +217,7 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
               ${ev.path},
               ${trunc(ev.query, 512)},
               ${trunc(ev.title, 512)},
-              ${new Date(ev.ts)}
+              ${new Date(ev.ts).toISOString()}
             )
           `;
         }
@@ -228,7 +230,7 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
   });
 
   app.get("/api/admin/analytics/summary", async (req: Request, res: Response) => {
-    if (!adminKeyOk(req)) {
+    if (!adminOrOperatorPortalOk(req)) {
       return res.status(401).json({ error: "admin_unauthorized" });
     }
     const sql = getPostgresSql();
@@ -237,6 +239,8 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
     }
     const to = parseQueryDate(req.query.to, new Date());
     const from = parseQueryDate(req.query.from, new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000));
+    const fromSql = from.toISOString();
+    const toSql = to.toISOString();
 
     try {
       const series = await sql`
@@ -245,7 +249,7 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
           COUNT(*)::text AS page_views,
           COUNT(DISTINCT session_id)::text AS sessions
         FROM analytics_page_views
-        WHERE occurred_at >= ${from} AND occurred_at <= ${to}
+        WHERE occurred_at >= ${fromSql}::timestamptz AND occurred_at <= ${toSql}::timestamptz
         GROUP BY 1
         ORDER BY 1 ASC
       `;
@@ -255,7 +259,7 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
           COUNT(*)::text AS page_views,
           COUNT(DISTINCT session_id)::text AS sessions
         FROM analytics_page_views
-        WHERE occurred_at >= ${from} AND occurred_at <= ${to}
+        WHERE occurred_at >= ${fromSql}::timestamptz AND occurred_at <= ${toSql}::timestamptz
       `;
       const t0 = totals[0] as unknown as { page_views: string; sessions: string } | undefined;
 
@@ -278,7 +282,7 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
   });
 
   app.get("/api/admin/analytics/top-pages", async (req: Request, res: Response) => {
-    if (!adminKeyOk(req)) {
+    if (!adminOrOperatorPortalOk(req)) {
       return res.status(401).json({ error: "admin_unauthorized" });
     }
     const sql = getPostgresSql();
@@ -286,12 +290,14 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
     const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
     const to = parseQueryDate(req.query.to, new Date());
     const from = parseQueryDate(req.query.from, new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000));
+    const fromSql = from.toISOString();
+    const toSql = to.toISOString();
 
     try {
       const rows = await sql`
         SELECT path, COUNT(*)::text AS c
         FROM analytics_page_views
-        WHERE occurred_at >= ${from} AND occurred_at <= ${to}
+        WHERE occurred_at >= ${fromSql}::timestamptz AND occurred_at <= ${toSql}::timestamptz
         GROUP BY path
         ORDER BY COUNT(*) DESC
         LIMIT ${limit}
@@ -305,7 +311,7 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
   });
 
   app.get("/api/admin/analytics/top-countries", async (req: Request, res: Response) => {
-    if (!adminKeyOk(req)) {
+    if (!adminOrOperatorPortalOk(req)) {
       return res.status(401).json({ error: "admin_unauthorized" });
     }
     const sql = getPostgresSql();
@@ -313,14 +319,16 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
     const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 30));
     const to = parseQueryDate(req.query.to, new Date());
     const from = parseQueryDate(req.query.from, new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000));
+    const fromSql = from.toISOString();
+    const toSql = to.toISOString();
 
     try {
       const rows = await sql`
         SELECT country, COUNT(*)::text AS c
         FROM analytics_sessions
         WHERE country IS NOT NULL
-          AND started_at >= ${from}
-          AND started_at <= ${to}
+          AND started_at >= ${fromSql}::timestamptz
+          AND started_at <= ${toSql}::timestamptz
         GROUP BY country
         ORDER BY COUNT(*) DESC
         LIMIT ${limit}
@@ -337,7 +345,7 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
   });
 
   app.get("/api/admin/analytics/recent-sessions", async (req: Request, res: Response) => {
-    if (!adminKeyOk(req)) {
+    if (!adminOrOperatorPortalOk(req)) {
       return res.status(401).json({ error: "admin_unauthorized" });
     }
     const sql = getPostgresSql();
@@ -374,8 +382,10 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
       return res.json({
         items: (rows as unknown as RecentRow[]).map((r) => ({
           id: r.id,
-          startedAt: r.started_at,
-          lastSeenAt: r.last_seen_at,
+          startedAt:
+            r.started_at instanceof Date ? r.started_at.toISOString() : String(r.started_at),
+          lastSeenAt:
+            r.last_seen_at instanceof Date ? r.last_seen_at.toISOString() : String(r.last_seen_at),
           anonymousId: r.anonymous_id,
           userId: r.user_id,
           country: r.country,

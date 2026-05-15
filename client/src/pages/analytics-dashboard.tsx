@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/Label";
 import { Badge } from "@/components/ui/Badge";
 import { Progress } from "@/components/ui/Progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
+import { OperatorAuthBoundary } from "@/components/admin/OperatorAuthBoundary";
 import { api } from "@/lib/queryClient";
 import type { Game } from "@shared/schema";
 import type { AnalyticsBucket, SkillScores } from "../../../server/services/analyticsComputer";
@@ -320,13 +321,15 @@ export default function AnalyticsDashboard() {
           )}
         </TabsContent>
         <TabsContent value="site" className="mt-4">
-          <React.Suspense
-            fallback={
-              <p className="text-sm text-muted-foreground py-8 text-center">Loading site analytics…</p>
-            }
-          >
-            <SiteTrafficOps />
-          </React.Suspense>
+          <OperatorAuthBoundary mode="card">
+            <React.Suspense
+              fallback={
+                <p className="text-sm text-muted-foreground py-8 text-center">Loading site analytics…</p>
+              }
+            >
+              <SiteTrafficOps />
+            </React.Suspense>
+          </OperatorAuthBoundary>
         </TabsContent>
       </Tabs>
     </div>

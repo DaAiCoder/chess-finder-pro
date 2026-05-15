@@ -19,6 +19,7 @@ interface SitePricing {
  */
 export default function AdminPricingPage() {
   const [pricing, setPricing] = React.useState<SitePricing | null>(null);
+  const [sessionOk, setSessionOk] = React.useState(false);
   const [adminKey, setAdminKey] = React.useState("");
   const [monthly, setMonthly] = React.useState("");
   const [yearly, setYearly] = React.useState("");
@@ -26,6 +27,13 @@ export default function AdminPricingPage() {
   const [err, setErr] = React.useState<string | null>(null);
   const [ok, setOk] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    void fetch("/api/operator/session", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d: { ok?: boolean }) => setSessionOk(!!d.ok))
+      .catch(() => setSessionOk(false));
+  }, []);
 
   React.useEffect(() => {
     void api<SitePricing>("/api/pricing")
@@ -42,17 +50,17 @@ export default function AdminPricingPage() {
   const save = async () => {
     setErr(null);
     setOk(null);
-    if (!adminKey.trim()) {
-      setErr("Enter the admin API key from the server environment (ADMIN_API_KEY).");
+    if (!sessionOk && !adminKey.trim()) {
+      setErr("Sign in with operator credentials, or enter ADMIN_API_KEY.");
       return;
     }
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (adminKey.trim()) headers.Authorization = `Bearer ${adminKey.trim()}`;
       const res = await fetch("/api/admin/pricing", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${adminKey.trim()}`,
-        },
+        credentials: "include",
+        headers,
         body: JSON.stringify({
           monthlyUsd: Number(monthly),
           yearlyUsd: Number(yearly),
@@ -109,13 +117,13 @@ export default function AdminPricingPage() {
             <Input value={currency} onChange={(e) => setCurrency(e.target.value)} maxLength={8} />
           </div>
           <div className="space-y-2">
-            <Label>Admin API key</Label>
+            <Label>Admin API key (optional if signed in)</Label>
             <Input
               type="password"
               autoComplete="off"
               value={adminKey}
               onChange={(e) => setAdminKey(e.target.value)}
-              placeholder="ADMIN_API_KEY from server .env"
+              placeholder={sessionOk ? "Optional override" : "ADMIN_API_KEY from server .env"}
             />
           </div>
           {err && <p className="text-xs text-destructive">{err}</p>}

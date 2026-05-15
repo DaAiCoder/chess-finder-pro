@@ -9,6 +9,7 @@ import { maybeAutoSeedLibrary } from "./services/autoSeedLibrary.js";
 import { ensureRatedBandGames } from "./services/ratedBandLibrarySeed.js";
 import { installAuth, registerAuthRoutes } from "./auth.js";
 import { registerSitePricingRoutes } from "./services/sitePricing.js";
+import { registerOperatorPortalRoutes } from "./services/operatorPortal.js";
 import { registerSiteAnalyticsRoutes } from "./services/siteAnalytics.js";
 import { registerBillingRoutes, registerBillingWebhook } from "./services/billing.js";
 import { runStartupSelfTests } from "./selfTest.js";
@@ -49,6 +50,7 @@ async function main() {
   // request has access to `req.session.userId`.
   installAuth(app);
   registerAuthRoutes(app);
+  registerOperatorPortalRoutes(app);
   registerSitePricingRoutes(app);
   registerSiteAnalyticsRoutes(app);
   registerBillingRoutes(app);

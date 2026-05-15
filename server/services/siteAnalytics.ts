@@ -262,6 +262,94 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
         WHERE occurred_at >= ${fromSql}::timestamptz AND occurred_at <= ${toSql}::timestamptz
       `;
       const t0 = totals[0] as unknown as { page_views: string; sessions: string } | undefined;
+      const pageViews = Number(t0?.page_views ?? 0);
+      const sessions = Number(t0?.sessions ?? 0);
+
+      const [uniqAnon, uniqSigned, bounceAgg, subsAgg, subsStatus, subsPlan, newUsers, topRefs] =
+        await Promise.all([
+          sql`
+            SELECT COUNT(DISTINCT s.anonymous_id)::text AS n
+            FROM analytics_sessions s
+            WHERE EXISTS (
+              SELECT 1 FROM analytics_page_views p
+              WHERE p.session_id = s.id
+                AND p.occurred_at >= ${fromSql}::timestamptz
+                AND p.occurred_at <= ${toSql}::timestamptz
+            )
+          `,
+          sql`
+            SELECT COUNT(DISTINCT s.user_id)::text AS n
+            FROM analytics_sessions s
+            WHERE s.user_id IS NOT NULL
+              AND EXISTS (
+                SELECT 1 FROM analytics_page_views p
+                WHERE p.session_id = s.id
+                  AND p.occurred_at >= ${fromSql}::timestamptz
+                  AND p.occurred_at <= ${toSql}::timestamptz
+              )
+          `,
+          sql`
+            WITH pv AS (
+              SELECT session_id, COUNT(*)::int AS n
+              FROM analytics_page_views
+              WHERE occurred_at >= ${fromSql}::timestamptz AND occurred_at <= ${toSql}::timestamptz
+              GROUP BY session_id
+            )
+            SELECT
+              COUNT(*)::text AS sessions,
+              COUNT(*) FILTER (WHERE n = 1)::text AS bounces
+            FROM pv
+          `,
+          sql`
+            SELECT
+              COUNT(*)::text AS total_users,
+              COUNT(*) FILTER (WHERE subscription_status IN ('active', 'trialing'))::text AS paying
+            FROM users
+          `,
+          sql`
+            SELECT COALESCE(NULLIF(TRIM(subscription_status), ''), 'none') AS status, COUNT(*)::text AS c
+            FROM users
+            GROUP BY 1
+            ORDER BY COUNT(*) DESC
+          `,
+          sql`
+            SELECT COALESCE(NULLIF(TRIM(subscription_plan), ''), 'none') AS plan, COUNT(*)::text AS c
+            FROM users
+            GROUP BY 1
+            ORDER BY COUNT(*) DESC
+          `,
+          sql`
+            SELECT COUNT(*)::text AS n
+            FROM users
+            WHERE created_at >= ${fromSql}::timestamptz AND created_at <= ${toSql}::timestamptz
+          `,
+          sql`
+            SELECT
+              COALESCE(NULLIF(TRIM(substring(s.referrer from 1 for 120)), ''), '(direct)') AS ref,
+              COUNT(DISTINCT s.id)::text AS c
+            FROM analytics_sessions s
+            INNER JOIN analytics_page_views p ON p.session_id = s.id
+            WHERE p.occurred_at >= ${fromSql}::timestamptz
+              AND p.occurred_at <= ${toSql}::timestamptz
+              AND s.referrer IS NOT NULL
+              AND length(trim(s.referrer)) > 0
+            GROUP BY 1
+            ORDER BY COUNT(*) DESC
+            LIMIT 12
+          `,
+        ]);
+
+      const ua = uniqAnon[0] as unknown as { n: string } | undefined;
+      const us = uniqSigned[0] as unknown as { n: string } | undefined;
+      const ba = bounceAgg[0] as unknown as { sessions: string; bounces: string } | undefined;
+      const bounceSessions = Number(ba?.bounces ?? 0);
+      const bounceBase = Number(ba?.sessions ?? 0);
+      const bounceRatePct =
+        bounceBase > 0 ? Math.round((bounceSessions / bounceBase) * 1000) / 10 : 0;
+      const avgPagesPerSession =
+        sessions > 0 ? Math.round((pageViews / sessions) * 100) / 100 : 0;
+
+      const sg = subsAgg[0] as unknown as { total_users: string; paying: string } | undefined;
 
       return res.json({
         from: from.toISOString(),
@@ -272,9 +360,31 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
           sessions: Number(r.sessions),
         })),
         totals: {
-          pageViews: Number(t0?.page_views ?? 0),
-          sessions: Number(t0?.sessions ?? 0),
+          pageViews,
+          sessions,
+          uniqueAnonymous: Number(ua?.n ?? 0),
+          signedInVisitors: Number(us?.n ?? 0),
+          avgPagesPerSession,
+          bounceSessions,
+          bounceRatePct,
         },
+        subscriptions: {
+          totalUsers: Number(sg?.total_users ?? 0),
+          activeOrTrialing: Number(sg?.paying ?? 0),
+          newUsersInRange: Number((newUsers[0] as unknown as { n: string })?.n ?? 0),
+          byStatus: (subsStatus as unknown as { status: string; c: string }[]).map((r) => ({
+            status: r.status,
+            count: Number(r.c),
+          })),
+          byPlan: (subsPlan as unknown as { plan: string; c: string }[]).map((r) => ({
+            plan: r.plan,
+            count: Number(r.c),
+          })),
+        },
+        topReferrers: (topRefs as unknown as { ref: string; c: string }[]).map((r) => ({
+          referrer: r.ref,
+          sessions: Number(r.c),
+        })),
       });
     } catch (err) {
       return res.status(500).json({ error: (err as Error).message });

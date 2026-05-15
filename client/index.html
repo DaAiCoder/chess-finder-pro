@@ -48,13 +48,12 @@
     <meta name="twitter:image" content="/og.png" />
 
     <!--
-      Google Tag (gtag.js) with Consent Mode v2.
-      All consent signals default to "denied" so nothing fires until the
-      visitor opts in via the cookie banner (see
-      client/src/components/ConsentBanner.tsx + client/src/lib/analytics.ts).
-      The tag script itself is only injected when VITE_GA4_MEASUREMENT_ID is
-      configured at build time — open-source forks without analytics keys
-      get a no-op shim.
+      Google Tag (gtag.js) with Consent Mode v2 (not the raw GA install snippet —
+      avoids a second tag and keeps SPA + banner behavior).
+      Production stream: G-MVGFLM1JGJ via VITE_GA4_MEASUREMENT_ID in root `.env`.
+      Defaults stay "denied" until the cookie banner grants storage
+      (ConsentBanner.tsx + client/src/lib/analytics.ts).
+      The gtag.js loader runs only when VITE_GA4_MEASUREMENT_ID (or Ads ID) is set at build/dev.
     -->
     <script defer src="/gtag-consent-bootstrap.js"></script>
     <script type="module">

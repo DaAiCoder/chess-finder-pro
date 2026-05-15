@@ -51,6 +51,7 @@ const AdminSiteAnalytics = React.lazy(() => import("@/pages/admin/site-analytics
 const PricingPage = React.lazy(() => import("@/pages/pricing"));
 const ThanksPage = React.lazy(() => import("@/pages/thanks"));
 const AccountBillingPage = React.lazy(() => import("@/pages/account-billing"));
+const AccountPage = React.lazy(() => import("@/pages/account"));
 const PrivacyPage = React.lazy(() => import("@/pages/legal/privacy"));
 const TermsPage = React.lazy(() => import("@/pages/legal/terms"));
 const RefundPage = React.lazy(() => import("@/pages/legal/refund"));
@@ -228,6 +229,7 @@ export default function App() {
                 <Route path="/pricing" component={PricingPage} />
                 <Route path="/thanks" component={ThanksPage} />
                 <Route path="/account/billing" component={AccountBillingPage} />
+                <Route path="/account" component={AccountPage} />
                 <Route path="/legal/privacy" component={PrivacyPage} />
                 <Route path="/legal/terms" component={TermsPage} />
                 <Route path="/legal/refund" component={RefundPage} />

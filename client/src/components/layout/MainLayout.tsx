@@ -25,6 +25,7 @@ import {
   PlayCircle,
   RotateCcw,
   Search,
+  Settings,
   ShieldAlert,
   Shuffle,
   Sparkles,
@@ -123,6 +124,10 @@ const NAV: NavGroup[] = [
       { href: "/openings", label: "Openings", icon: Goal },
       { href: "/endgames", label: "Endgames", icon: Flame },
     ],
+  },
+  {
+    title: "Account",
+    items: [{ href: "/account", label: "Account", icon: Settings }],
   },
 ];
 
@@ -566,7 +571,7 @@ function UserBadge({
   }
   return (
     <Link
-      href="/statistics"
+      href="/account"
       className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-secondary/60 hover:bg-secondary border border-border/60 text-foreground/90"
     >
       <UserIcon className="w-3.5 h-3.5 text-emerald-400" />
@@ -584,7 +589,7 @@ const MOBILE_TABS: { href: string; label: string; icon: React.ComponentType<{ cl
   { href: "/training", label: "Train", icon: Layers },
   { href: "/analytics", label: "Analyze", icon: TrendingUp },
   { href: "/coach", label: "Ask Tal", icon: MessageCircle },
-  { href: "/statistics", label: "Me", icon: UserIcon },
+  { href: "/account", label: "Account", icon: Settings },
 ];
 
 function MobileBottomNav() {

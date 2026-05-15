@@ -76,6 +76,11 @@ export default function AccountBillingPage() {
 
   return (
     <div className="px-4 py-10 max-w-xl mx-auto space-y-4">
+      <p className="text-sm">
+        <Link href="/account" className="text-muted-foreground hover:text-foreground underline-offset-2 hover:underline">
+          ← Account
+        </Link>
+      </p>
       <h1 className="text-2xl font-semibold tracking-tight">Billing</h1>
 
       <Card>

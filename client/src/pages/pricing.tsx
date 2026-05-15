@@ -18,6 +18,8 @@ interface SitePricing {
 
 type Plan = "monthly" | "yearly";
 
+const PRICING_RESUME_KEY = "cfp_pricing_resume_plan";
+
 export default function PricingPage() {
   const [, setLoc] = useLocation();
   const search = useSearch();
@@ -64,11 +66,18 @@ export default function PricingPage() {
   const savingsPct =
     yearlyAnnual > 0 ? Math.round(((yearlyAnnual - yearly) / yearlyAnnual) * 100) : 0;
 
+  const checkoutResumeRef = React.useRef(false);
+
   const startCheckout = async (selected: Plan) => {
     setErr(null);
     const value = selected === "monthly" ? monthly : yearly;
     trackBeginCheckout({ plan: selected, value, currency: pricing?.currency ?? "USD" });
     if (!signedIn) {
+      try {
+        sessionStorage.setItem(PRICING_RESUME_KEY, selected);
+      } catch {
+        /* private mode */
+      }
       setLoc(`/signup?mode=register&next=${encodeURIComponent(`/pricing?plan=${selected}`)}`);
       return;
     }
@@ -79,17 +88,29 @@ export default function PricingPage() {
         body: JSON.stringify({ plan: selected }),
       });
       if (res?.url) {
+        try {
+          sessionStorage.removeItem(PRICING_RESUME_KEY);
+        } catch {
+          /* noop */
+        }
         window.location.href = res.url;
       } else {
+        checkoutResumeRef.current = false;
         setErr("Could not start checkout. Please try again.");
       }
     } catch (e) {
+      checkoutResumeRef.current = false;
       const msg = (e as Error).message;
       if (msg === "billing_disabled") {
         setErr("Payments aren't enabled on this server yet.");
       } else if (msg === "price_not_configured") {
         setErr("This plan isn't configured on the server yet.");
       } else if (msg === "auth_required") {
+        try {
+          sessionStorage.setItem(PRICING_RESUME_KEY, selected);
+        } catch {
+          /* noop */
+        }
         setLoc(`/signup?mode=register&next=${encodeURIComponent(`/pricing?plan=${selected}`)}`);
       } else {
         setErr("Checkout failed. Please try again.");
@@ -99,15 +120,29 @@ export default function PricingPage() {
     }
   };
 
-  // Auto-resume checkout if user came back from `/signup?next=/pricing?plan=…`.
+  // Auto-resume checkout after sign-in: URL `?plan=` and/or sessionStorage
+  // fallback if `next` was dropped (magic link, bookmarked /signup, etc.).
   React.useEffect(() => {
-    const wantPlan = params.get("plan");
-    if (signedIn && (wantPlan === "monthly" || wantPlan === "yearly")) {
-      setPlan(wantPlan);
-      void startCheckout(wantPlan);
+    if (!signedIn) {
+      checkoutResumeRef.current = false;
+      return;
     }
+    let wantPlan = params.get("plan");
+    if (wantPlan !== "monthly" && wantPlan !== "yearly") {
+      try {
+        const stored = sessionStorage.getItem(PRICING_RESUME_KEY);
+        if (stored === "monthly" || stored === "yearly") wantPlan = stored;
+      } catch {
+        /* noop */
+      }
+    }
+    if (wantPlan !== "monthly" && wantPlan !== "yearly") return;
+    if (checkoutResumeRef.current) return;
+    checkoutResumeRef.current = true;
+    setPlan(wantPlan);
+    void startCheckout(wantPlan);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signedIn]);
+  }, [signedIn, search]);
 
   return (
     <div className="px-4 py-10 md:py-14 max-w-5xl mx-auto">

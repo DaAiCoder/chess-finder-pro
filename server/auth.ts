@@ -46,6 +46,7 @@ import { sendMagicLinkEmail } from "./services/transactionalEmail.js";
 import { storage } from "./storage.js";
 import type { User } from "../shared/schema.js";
 import { isCommonPassword } from "./services/commonPasswords.js";
+import { proAccessPayload, userHasProAccess, isAnonymousUsername } from "./accessPolicy.js";
 
 /* ---------------------------------------------------------------------- */
 /* Module augmentation: extend express-session SessionData                 */
@@ -339,14 +340,37 @@ export function registerAuthRoutes(app: Express): void {
   app.get("/api/auth/me", async (req: Request, res: Response) => {
     const u = await getCurrentUser(req);
     if (!u) return res.json({ authenticated: false });
+    const anon = u.username.startsWith("anon-");
+    if (anon) {
+      return res.json({
+        authenticated: false,
+        anonymous: true,
+        id: u.id,
+        username: u.username,
+        email: u.email ?? null,
+        lichess: null,
+        preferences: u.preferences ?? {},
+        hasProAccess: false,
+        trialEndsAt: null,
+        subscriptionActive: false,
+        complimentary: false,
+        inSignupTrial: false,
+      });
+    }
+    const access = proAccessPayload(u);
     res.json({
-      authenticated: !u.username.startsWith("anon-"),
-      anonymous: u.username.startsWith("anon-"),
+      authenticated: true,
+      anonymous: false,
       id: u.id,
       username: u.username,
       email: u.email ?? null,
       lichess: u.username.startsWith("lichess-") ? u.username.slice(8) : null,
       preferences: u.preferences ?? {},
+      hasProAccess: access.hasProAccess,
+      trialEndsAt: access.trialEndsAt,
+      subscriptionActive: access.subscriptionActive,
+      complimentary: access.complimentary,
+      inSignupTrial: access.inSignupTrial,
     });
   });
 
@@ -684,6 +708,33 @@ export function registerAuthRoutes(app: Express): void {
       res.redirect(`${publicOrigin(req)}/login?error=oauth_failed`);
     }
   });
+}
+
+/**
+ * Paid coach + opponent-prep APIs: real member accounts need an active
+ * subscription, complimentary flag, or in the 3-day signup trial. Anonymous
+ * sessions still reach handlers (landing previews use the same routes).
+ */
+export function registerProFeatureGate(app: Express): void {
+  app.use("/api/coach", proFeatureGateMiddleware);
+  app.use("/api/opponent-prep", proFeatureGateMiddleware);
+}
+
+async function proFeatureGateMiddleware(req: Request, res: Response, next: NextFunction) {
+  try {
+    await getUserId(req);
+    const u = await getCurrentUser(req);
+    if (!u) return res.status(401).json({ error: "auth_required" });
+    if (isAnonymousUsername(u.username)) return next();
+    if (userHasProAccess(u)) return next();
+    const p = proAccessPayload(u);
+    return res.status(402).json({
+      error: "subscription_required",
+      trialEndsAt: p.trialEndsAt,
+    });
+  } catch (e) {
+    next(e as Error);
+  }
 }
 
 /** Express middleware that demands a non-anonymous user. */

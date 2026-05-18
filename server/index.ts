@@ -7,7 +7,7 @@ import { seedTraining, seedBulkBasicMatesInBackground } from "./seed-training.js
 import { maybeAutoSeedFromChampions } from "./services/autoSeedFromChampions.js";
 import { maybeAutoSeedLibrary } from "./services/autoSeedLibrary.js";
 import { ensureRatedBandGames } from "./services/ratedBandLibrarySeed.js";
-import { installAuth, registerAuthRoutes } from "./auth.js";
+import { installAuth, registerAuthRoutes, registerProFeatureGate } from "./auth.js";
 import { registerSitePricingRoutes } from "./services/sitePricing.js";
 import { registerOperatorPortalRoutes } from "./services/operatorPortal.js";
 import { registerSiteAnalyticsRoutes } from "./services/siteAnalytics.js";
@@ -54,6 +54,7 @@ async function main() {
   registerSitePricingRoutes(app);
   registerSiteAnalyticsRoutes(app);
   registerBillingRoutes(app);
+  registerProFeatureGate(app);
   registerRoutes(app);
 
   // Validate seeds + opening prefixes once at boot — non-fatal warnings.

@@ -5,8 +5,9 @@
  * feature ("coach", "analysis", "blind", "opponent") gets its own
  * 3-try counter, persisted in localStorage and synced across tabs.
  *
- * Signed-in (non-anonymous) users are unlimited — the hook still works
- * but reports `unlimited: true` and never blocks a call.
+ * Signed-in members with Pro access (`hasProAccess`) get unlimited preview
+ * counters on /welcome widgets. Guests and signed-in users without Pro use
+ * the per-widget cap.
  *
  * The full pages at /coach, /analysis, /opponent-prep are behind
  * `RequireAuth`, so guests can only consume the matching previews
@@ -65,7 +66,7 @@ export function resetPreviewQuotaAll(): void {
 }
 
 export interface UsePreviewQuotaResult {
-  /** True for signed-in (non-anonymous) accounts — calls are never blocked. */
+  /** True when the user has Pro access (trial, subscription, or complimentary). */
   unlimited: boolean;
   /** How many tries the guest has spent on this widget. */
   used: number;
@@ -86,7 +87,7 @@ export interface UsePreviewQuotaResult {
 
 export function usePreviewQuota(widget: PreviewWidget): UsePreviewQuotaResult {
   const { user } = useCurrentUser();
-  const unlimited = !!user && !user.anonymous;
+  const unlimited = !!user && !user.anonymous && user.hasProAccess === true;
 
   const [counts, setCounts] = React.useState<Counts>(() => readCounts());
 

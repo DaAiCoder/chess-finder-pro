@@ -776,6 +776,7 @@ function PricingTeaser() {
   const cur = pricing?.currency ?? "USD";
   const monthly = pricing?.monthlyUsd ?? 12.99;
   const yearly = pricing?.yearlyUsd ?? 79;
+  const yearlyMonthly = yearly / 12;
   const fmt = React.useMemo(
     () =>
       new Intl.NumberFormat("en-US", {
@@ -794,39 +795,40 @@ function PricingTeaser() {
           Pricing
         </p>
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-          Free forever for the trainers
+          3-day trial, then Pro
         </h2>
-        <p className="text-muted-foreground text-sm">
-          Premium plans cover Ask Tal, deep Analysis, Blind Tactics, and Opponent Prep.
+        <p className="text-muted-foreground text-sm max-w-xl mx-auto">
+          New accounts get full Pro for 3 days. Subscribe on the yearly plan to keep Ask Tal,
+          Analysis, Blind Tactics, and Opponent Prep. Monthly billing is waitlisted.
         </p>
       </div>
       <div className="grid md:grid-cols-2 gap-4 md:gap-6">
         <PlanCard
-          title="Free"
-          tag="Guest"
-          price="$0"
-          priceNote="forever"
+          title="Trial"
+          tag="New accounts"
+          price="Free"
+          priceNote="3 days full Pro"
           features={[
-            `${PREVIEW_BUDGET} tries each of Coach, Analysis, Blind Tactics, Opponent`,
-            "Every training-hub trainer fully unlocked",
+            "Unlimited Coach, Analysis, Blind Tactics, and Opponent Prep during trial",
+            "Every training-hub trainer unlocked",
             "Play vs Stockfish and persona bots",
-            "Local progress saved on this device",
+            `Guests: ${PREVIEW_BUDGET} preview tries per feature on this page only`,
           ]}
-          cta={{ label: "Sign up free", href: "/signup", primary: true }}
+          cta={{ label: "Create account", href: "/signup?mode=register", primary: false }}
           outline
         />
         <PlanCard
           title="Pro"
-          tag="Coming soon"
-          price={fmt.format(monthly)}
+          tag="Yearly"
+          price={fmt.format(yearlyMonthly)}
           priceNote={`per month · ${fmt.format(yearly)} billed yearly`}
           features={[
             "Unlimited Ask Tal, Analysis, Blind Tactics, Opponent Prep",
             "Cross-device sync for ratings, history, and saved positions",
             "Priority Stockfish depth and faster coach responses",
-            "Early access to new trainers as they ship",
+            "Secure checkout via Stripe · cancel anytime from Account",
           ]}
-          cta={{ label: "Join the waitlist", href: "/signup", primary: false }}
+          cta={{ label: "Subscribe yearly", href: "/pricing?plan=yearly", primary: true }}
           accent
         />
       </div>

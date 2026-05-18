@@ -46,8 +46,40 @@ export default function AccountPage() {
     return null;
   }
 
+  const needsSub = user.hasProAccess !== true && user.complimentary !== true;
+  const trialEnds =
+    user.trialEndsAt &&
+    (() => {
+      try {
+        return new Date(user.trialEndsAt).toLocaleString();
+      } catch {
+        return null;
+      }
+    })();
+
   return (
     <div className="px-4 py-10 max-w-xl mx-auto space-y-6">
+      {needsSub && (
+        <Card className="border-amber-500/40 bg-amber-950/25">
+          <CardContent className="p-4 text-sm text-muted-foreground space-y-2">
+            <p className="font-medium text-amber-200/95">Pro access required</p>
+            <p>
+              Your <strong className="text-foreground">3-day trial</strong> has ended or you need
+              an active subscription. Subscribe to the <strong className="text-foreground">yearly</strong>{" "}
+              plan to continue. Monthly billing is waitlisted — use{" "}
+              <Link href="/legal/contact" className="underline text-foreground">
+                Contact
+              </Link>{" "}
+              to join the list.
+            </p>
+            {trialEnds && <p className="text-xs text-muted-foreground">Access window ended: {trialEnds}</p>}
+            <Button asChild className="mt-1" style={{ backgroundColor: "#769656", color: "white" }}>
+              <Link href="/pricing">View pricing</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Account</h1>
         <p className="text-sm text-muted-foreground mt-1">

@@ -109,7 +109,7 @@ export function SoftGate({ feature }: { feature: GatedFeature }) {
               className="w-full"
               style={{ backgroundColor: "#769656", color: "white" }}
             >
-              Sign up free
+              Create account
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </Link>
@@ -126,7 +126,8 @@ export function SoftGate({ feature }: { feature: GatedFeature }) {
         </div>
 
         <p className="text-[11px] text-center text-muted-foreground">
-          Free forever for casual use. Premium plans launching soon.
+          Create an account for a 3-day Pro trial. After that, a paid yearly plan is
+          required (monthly is waitlisted). Guests can try limited previews here.
         </p>
       </Card>
     </div>

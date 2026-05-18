@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { SoftGate, type GatedFeature } from "./SoftGate";
+import { SubscribeGate } from "./SubscribeGate";
 
 /**
  * Renders `children` for signed-in (non-anonymous) users; otherwise
@@ -29,6 +30,10 @@ export function RequireAuth({
 
   if (!user || user.anonymous) {
     return <SoftGate feature={feature} />;
+  }
+
+  if (user.hasProAccess !== true) {
+    return <SubscribeGate feature={feature} trialEndsAt={user.trialEndsAt} />;
   }
 
   return <>{children}</>;

@@ -9,6 +9,12 @@ export interface CurrentUser {
   email?: string | null;
   lichess: string | null;
   preferences?: Record<string, unknown>;
+  /** Pro features: subscription, signup trial, or complimentary test account. */
+  hasProAccess?: boolean;
+  trialEndsAt?: string | null;
+  subscriptionActive?: boolean;
+  complimentary?: boolean;
+  inSignupTrial?: boolean;
 }
 
 /**

@@ -251,7 +251,7 @@ export default function LoginPage() {
                         type={m === "login" ? "text" : "email"}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder={m === "login" ? "dev or dev@localhost" : "you@example.com"}
+                        placeholder={m === "login" ? "you@example.com or username" : "you@example.com"}
                         autoComplete={m === "login" ? "username" : "email"}
                         maxLength={254}
                         spellCheck={false}

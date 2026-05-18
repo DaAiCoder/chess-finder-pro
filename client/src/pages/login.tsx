@@ -159,10 +159,13 @@ export default function LoginPage() {
 
   const pwStrength = React.useMemo(() => scorePassword(password), [password]);
 
+  const identifierOk =
+    mode === "register" ? isValidEmail(email.trim()) : isValidLoginIdentifier(email.trim());
+
   const primaryDisabled =
     busy ||
     !email.trim() ||
-    !isValidEmail(email.trim()) ||
+    !identifierOk ||
     (!usePasswordless && password.length < (mode === "register" ? 8 : 1)) ||
     (mode === "register" && !usePasswordless && username.trim().length < 2);
 
@@ -242,14 +245,14 @@ export default function LoginPage() {
 
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-muted-foreground">
-                        Email
+                        {m === "login" ? "Email or username" : "Email"}
                       </label>
                       <Input
-                        type="email"
+                        type={m === "login" ? "text" : "email"}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@example.com"
-                        autoComplete="email"
+                        placeholder={m === "login" ? "dev or dev@localhost" : "you@example.com"}
+                        autoComplete={m === "login" ? "username" : "email"}
                         maxLength={254}
                         spellCheck={false}
                         required
@@ -449,4 +452,12 @@ function scorePassword(pw: string): number {
 function isValidEmail(s: string): boolean {
   // Conservative — server is the source of truth.
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && s.length <= 254;
+}
+
+/** Sign-in accepts email (magic link / passport) or username (e.g. dev). */
+function isValidLoginIdentifier(s: string): boolean {
+  const t = s.trim();
+  if (!t || t.length > 254) return false;
+  if (isValidEmail(t)) return true;
+  return /^[a-zA-Z0-9_-]{2,30}$/.test(t);
 }

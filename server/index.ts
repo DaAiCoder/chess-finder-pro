@@ -16,6 +16,7 @@ import { runStartupSelfTests } from "./selfTest.js";
 import { startGeneratorCron } from "./services/generatorCron.js";
 import { resolveCoachLlmForExplain } from "./services/coachLlm.js";
 import { injectOperatorPortalMeta } from "./spaHtmlInject.js";
+import { ensureDevLoginUser } from "./devUser.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,6 +45,7 @@ async function main() {
   });
 
   await storage.init();
+  await ensureDevLoginUser();
   await seedTraining(storage);
 
   // Session + identity must be installed BEFORE route handlers so every

@@ -346,24 +346,6 @@ class InMemoryStorage implements IStorage {
         );
       }
     }
-    if (this.users.size === 0) {
-      const dev: User = {
-        id: this.id(),
-        username: "dev",
-        email: null,
-        password: "dev",
-        preferences: null,
-        stripeCustomerId: null,
-        stripeSubscriptionId: null,
-        subscriptionStatus: null,
-        subscriptionPlan: null,
-        subscriptionCurrentPeriodEnd: null,
-        subscriptionCancelAtPeriodEnd: false,
-        createdAt: new Date(),
-      };
-      this.users.set(dev.id, dev);
-      this.schedulePersist();
-    }
   }
 
   /**

@@ -172,7 +172,7 @@ function TopNavStatus() {
         </>
       )}
       <UserBadge user={user} />
-    </motion.div>
+    </div>
   );
 }
 

@@ -74,9 +74,8 @@ export function SubscribeGate({
 
         <p className="text-sm text-muted-foreground leading-relaxed">
           New accounts get <strong className="text-foreground">3 days</strong> of full Pro access.
-          After that, subscribe to the <strong className="text-foreground">yearly</strong> plan to
-          continue. The <strong className="text-foreground">$12.99/mo</strong> option is waitlisted —
-          join the list from pricing if you prefer monthly billing later.
+          After that, subscribe <strong className="text-foreground">monthly</strong> or{" "}
+          <strong className="text-foreground">yearly</strong> to continue.
         </p>
 
         {trialEndLabel && (

@@ -798,8 +798,8 @@ function PricingTeaser() {
           3-day trial, then Pro
         </h2>
         <p className="text-muted-foreground text-sm max-w-xl mx-auto">
-          New accounts get full Pro for 3 days. Subscribe on the yearly plan to keep Ask Tal,
-          Analysis, Blind Tactics, and Opponent Prep. Monthly billing is waitlisted.
+          New accounts get full Pro for 3 days. Subscribe monthly or yearly to keep Ask Tal,
+          Analysis, Blind Tactics, and Opponent Prep.
         </p>
       </div>
       <div className="grid md:grid-cols-2 gap-4 md:gap-6">
@@ -819,16 +819,16 @@ function PricingTeaser() {
         />
         <PlanCard
           title="Pro"
-          tag="Yearly"
+          tag="Pro"
           price={fmt.format(yearlyMonthly)}
-          priceNote={`per month · ${fmt.format(yearly)} billed yearly`}
+          priceNote={`per month · ${fmt.format(yearly)} billed yearly (monthly also available)`}
           features={[
             "Unlimited Ask Tal, Analysis, Blind Tactics, Opponent Prep",
             "Cross-device sync for ratings, history, and saved positions",
             "Priority Stockfish depth and faster coach responses",
             "Secure checkout via Stripe · cancel anytime from Account",
           ]}
-          cta={{ label: "Subscribe yearly", href: "/pricing?plan=yearly", primary: true }}
+          cta={{ label: "View pricing", href: "/pricing", primary: true }}
           accent
         />
       </div>

@@ -65,12 +65,8 @@ export default function AccountPage() {
             <p className="font-medium text-amber-200/95">Pro access required</p>
             <p>
               Your <strong className="text-foreground">3-day trial</strong> has ended or you need
-              an active subscription. Subscribe to the <strong className="text-foreground">yearly</strong>{" "}
-              plan to continue. Monthly billing is waitlisted — use{" "}
-              <Link href="/legal/contact" className="underline text-foreground">
-                Contact
-              </Link>{" "}
-              to join the list.
+              an active subscription. Subscribe <strong className="text-foreground">monthly</strong> or{" "}
+              <strong className="text-foreground">yearly</strong> to continue.
             </p>
             {trialEnds && <p className="text-xs text-muted-foreground">Access window ended: {trialEnds}</p>}
             <Button asChild className="mt-1" style={{ backgroundColor: "#769656", color: "white" }}>

@@ -151,9 +151,6 @@ export function registerBillingRoutes(app: Express): void {
     if (!parsed.success) return res.status(400).json({ error: "invalid_plan" });
 
     const plan = parsed.data.plan;
-    if (plan === "monthly") {
-      return res.status(403).json({ error: "plan_waitlisted" });
-    }
     const priceId = priceIdFor(plan);
     if (!priceId) return res.status(503).json({ error: "price_not_configured", plan });
 

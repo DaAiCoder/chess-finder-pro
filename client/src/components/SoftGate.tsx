@@ -127,7 +127,7 @@ export function SoftGate({ feature }: { feature: GatedFeature }) {
 
         <p className="text-[11px] text-center text-muted-foreground">
           Create an account for a 3-day Pro trial. After that, a paid yearly plan is
-          required (monthly is waitlisted). Guests can try limited previews here.
+          required. Guests can try limited previews here.
         </p>
       </Card>
     </div>

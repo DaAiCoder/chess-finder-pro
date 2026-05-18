@@ -35,14 +35,13 @@ export default function PricingPage() {
     staleTime: 60_000,
   });
 
-  /** Yearly is the only checkout path; monthly is waitlisted. */
   const [plan, setPlan] = React.useState<Plan>("yearly");
   const [busy, setBusy] = React.useState(false);
   const [err, setErr] = React.useState<string | null>(null);
 
   useDocumentTitle(
     "Pricing — Chess Finder Pro",
-    "3-day full Pro trial, then yearly subscription. $12.99/mo is waitlisted. Chess Finder Pro yearly plan with Ask Tal, deep analysis, and every trainer.",
+    "3-day full Pro trial, then subscribe monthly or yearly. Chess Finder Pro with Ask Tal, deep analysis, and every trainer.",
   );
 
   React.useEffect(() => {
@@ -71,10 +70,6 @@ export default function PricingPage() {
 
   const startCheckout = async (selected: Plan) => {
     setErr(null);
-    if (signedIn && selected === "monthly") {
-      setLoc("/legal/contact");
-      return;
-    }
     const value = selected === "monthly" ? monthly : yearly;
     trackBeginCheckout({ plan: selected, value, currency: pricing?.currency ?? "USD" });
     if (!signedIn) {
@@ -110,8 +105,6 @@ export default function PricingPage() {
         setErr("Payments aren't enabled on this server yet.");
       } else if (msg === "price_not_configured") {
         setErr("This plan isn't configured on the server yet.");
-      } else if (msg === "plan_waitlisted") {
-        setErr("Monthly billing is waitlisted. Please choose yearly or join the waitlist from Contact.");
       } else if (msg === "auth_required") {
         try {
           sessionStorage.setItem(PRICING_RESUME_KEY, selected);
@@ -143,21 +136,17 @@ export default function PricingPage() {
         /* noop */
       }
     }
-    if (wantPlan === "monthly") {
+    if (wantPlan === "monthly" || wantPlan === "yearly") {
       try {
         sessionStorage.removeItem(PRICING_RESUME_KEY);
       } catch {
         /* noop */
       }
+      if (checkoutResumeRef.current) return;
       checkoutResumeRef.current = true;
-      setPlan("monthly");
-      return;
+      setPlan(wantPlan);
+      void startCheckout(wantPlan);
     }
-    if (wantPlan !== "monthly" && wantPlan !== "yearly") return;
-    if (checkoutResumeRef.current) return;
-    checkoutResumeRef.current = true;
-    setPlan(wantPlan);
-    void startCheckout(wantPlan);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signedIn, search]);
 
@@ -172,10 +161,9 @@ export default function PricingPage() {
         </h1>
         <p className="text-sm text-muted-foreground max-w-xl mx-auto">
           Every new account gets <strong className="text-foreground">3 days</strong> of full Pro.
-          After that you need an active yearly subscription. The{" "}
-          <strong className="text-foreground">$12.99/mo</strong> plan is{" "}
-          <strong className="text-foreground">waitlisted</strong> — join the list from the
-          monthly tab. There is no permanent free tier (internal test accounts excepted).
+          After that, subscribe <strong className="text-foreground">monthly</strong> or{" "}
+          <strong className="text-foreground">yearly</strong>. There is no permanent free tier
+          (internal test accounts excepted).
         </p>
       </div>
 
@@ -198,7 +186,7 @@ export default function PricingPage() {
           features={[
             "Unlimited Ask Tal, Analysis, Blind Tactics, and Opponent Prep during the trial",
             "Same feature set as paid Pro — no watered-down build",
-            "After day 3 you need yearly Pro (monthly is waitlisted)",
+            "After day 3 you need Pro (monthly or yearly)",
             "Guests: limited previews on /welcome only until you register",
           ]}
           cta={{
@@ -217,30 +205,28 @@ export default function PricingPage() {
             isLoading
               ? "per month"
               : plan === "monthly"
-                ? "waitlisted — join from button below"
+                ? "per month, billed monthly"
                 : `per month, billed ${fmt.format(yearly)} yearly`
           }
-          badge={plan === "yearly" && savingsPct > 0 ? `Save ${savingsPct}%` : plan === "monthly" ? "Waitlist" : undefined}
+          badge={plan === "yearly" && savingsPct > 0 ? `Save ${savingsPct}%` : undefined}
           features={[
             "Unlimited Ask Tal, Analysis, Blind Tactics, Opponent Prep",
             "Priority Stockfish depth + faster coach responses",
             "Cross-device sync for ratings, history, saved positions",
             "Repertoire trainer + deviation drills",
-            "Yearly checkout via Stripe · cancel from billing portal",
+            "Monthly or yearly checkout via Stripe · cancel from billing portal",
             plan === "monthly"
-              ? "$12.99/mo opens when we clear the waitlist"
-              : "Billed yearly after your 3-day trial ends (subscribe before lockout)",
+              ? "Billed monthly after your 3-day trial ends"
+              : "Billed yearly after your 3-day trial ends (best value)",
           ]}
           cta={{
-            label:
-              plan === "monthly"
-                ? "Join monthly waitlist"
-                : busy
-                  ? "Opening checkout…"
-                  : "Subscribe yearly",
-            onClick: () =>
-              plan === "monthly" ? setLoc("/legal/contact") : void startCheckout("yearly"),
-            disabled: busy && plan === "yearly",
+            label: busy
+              ? "Opening checkout…"
+              : plan === "monthly"
+                ? "Subscribe monthly"
+                : "Subscribe yearly",
+            onClick: () => void startCheckout(plan),
+            disabled: busy,
             primary: true,
           }}
           footer={
@@ -248,9 +234,7 @@ export default function PricingPage() {
               <p className="text-xs text-destructive">{err}</p>
             ) : (
               <p className="text-[10px] text-muted-foreground">
-                {plan === "monthly"
-                  ? "We email waitlisters when monthly billing opens."
-                  : "Secure checkout by Stripe · Refund within 7 days of first charge"}
+                Secure checkout by Stripe · Refund within 7 days of first charge
               </p>
             )
           }
@@ -409,7 +393,7 @@ function FaqBlock({ currency, monthlyPrice }: { currency: string; monthlyPrice: 
           the voice of any world champion), deep Analysis on your imported games,
           Blind Tactics, Opponent Prep, the Repertoire Trainer, and priority
           Stockfish depth. New accounts get a <strong>3-day full trial</strong>;
-          after that you need a paid yearly plan (monthly is waitlisted).
+          after that you need a paid monthly or yearly plan.
         </>
       ),
     },

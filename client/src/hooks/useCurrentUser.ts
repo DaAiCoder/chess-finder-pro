@@ -21,6 +21,11 @@ export interface CurrentUser {
  * Session-bound identity from `/api/auth/me` (anonymous user created on
  * first visit, or Lichess-linked account after OAuth).
  */
+/** True when the user has a real account (not the anonymous guest session). */
+export function isSignedInUser(user: CurrentUser | undefined | null): boolean {
+  return Boolean(user?.authenticated && !user.anonymous);
+}
+
 export function useCurrentUser() {
   const q = useQuery<CurrentUser>({
     queryKey: ["auth", "me"],

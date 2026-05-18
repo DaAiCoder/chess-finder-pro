@@ -40,6 +40,7 @@ import {
 import { cn } from "@/lib/utils";
 import { OrientationBanner, triggerOrientationBanner } from "@/components/OrientationBanner";
 import { AppHeader, Brand } from "@/components/layout/AppHeader";
+import { isSignedInUser, useCurrentUser } from "@/hooks/useCurrentUser";
 
 interface NavItem {
   href: string;
@@ -131,9 +132,16 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [location] = useLocation();
+  const { user } = useCurrentUser();
+  const showAppNav = isSignedInUser(user);
+
+  React.useEffect(() => {
+    if (!showAppNav) setMobileOpen(false);
+  }, [showAppNav]);
 
   return (
     <div className="flex h-full min-h-screen w-full bg-background text-foreground">
+      {showAppNav && (
       <aside
         className={cn(
           "hidden md:flex flex-col border-r border-border bg-card transition-all",
@@ -165,9 +173,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <WhatsNewFooter collapsed={collapsed} />
         <PlayComputerButton collapsed={collapsed} />
       </aside>
+      )}
 
       {/* Mobile drawer */}
-      {mobileOpen && (
+      {showAppNav && mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div
             className="absolute inset-0 bg-black/60"
@@ -213,10 +222,15 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
-        <AppHeader onOpenMenu={() => setMobileOpen(true)} />
+        <AppHeader
+          chromeless={!showAppNav}
+          onOpenMenu={showAppNav ? () => setMobileOpen(true) : undefined}
+        />
         <OrientationBanner />
-        <main className="flex-1 overflow-y-auto pb-16 md:pb-0">{children}</main>
-        <MobileBottomNav />
+        <main className={cn("flex-1 overflow-y-auto", showAppNav && "pb-16 md:pb-0")}>
+          {children}
+        </main>
+        {showAppNav && <MobileBottomNav />}
       </div>
     </div>
   );

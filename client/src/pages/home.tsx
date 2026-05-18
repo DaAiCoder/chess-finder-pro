@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Redirect } from "wouter";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { isSignedInUser, useCurrentUser } from "@/hooks/useCurrentUser";
 import LandingPage from "./landing";
 
 /**

@@ -141,14 +141,19 @@ const ASK_TAL_HEADER_PROMPTS = [
   "What should I work on this week?",
 ];
 
+function isAccountSettingsPath(location: string): boolean {
+  return location === "/account" || location.startsWith("/account/");
+}
+
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [location] = useLocation();
+  const chromeless = isAccountSettingsPath(location);
 
   return (
     <div className="flex h-full min-h-screen w-full bg-background text-foreground">
-      {/* Sidebar (desktop) */}
+      {!chromeless && (
       <aside
         className={cn(
           "hidden md:flex flex-col border-r border-border bg-card transition-all",
@@ -180,9 +185,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <WhatsNewFooter collapsed={collapsed} />
         <PlayComputerButton collapsed={collapsed} />
       </aside>
+      )}
 
       {/* Mobile drawer */}
-      {mobileOpen && (
+      {!chromeless && mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div
             className="absolute inset-0 bg-black/60"
@@ -230,15 +236,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="flex h-14 items-center gap-2 sm:gap-3 border-b border-border bg-card/50 px-3 sm:px-4 md:px-6 min-w-0">
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setMobileOpen(true)}
-              className="md:hidden p-2 rounded hover:bg-secondary"
-              aria-label="Open menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <div className="md:hidden">
-              <Brand small />
+            {!chromeless && (
+              <button
+                onClick={() => setMobileOpen(true)}
+                className="md:hidden p-2 rounded hover:bg-secondary"
+                aria-label="Open menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
+            <div className={cn(chromeless ? "flex" : "md:hidden")}>
+              <Brand small={chromeless} />
             </div>
           </div>
           <div className="flex-1 min-w-0 flex justify-center px-1 sm:px-3">
@@ -247,8 +255,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           <TopNavStatus />
         </header>
         <OrientationBanner />
-        <main className="flex-1 overflow-y-auto pb-16 md:pb-0">{children}</main>
-        <MobileBottomNav />
+        <main className={cn("flex-1 overflow-y-auto", !chromeless && "pb-16 md:pb-0")}>
+          {children}
+        </main>
+        {!chromeless && <MobileBottomNav />}
       </div>
     </div>
   );

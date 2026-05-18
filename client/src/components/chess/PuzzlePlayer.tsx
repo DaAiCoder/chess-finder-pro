@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Chess } from "chess.js";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Chessboard } from "@/components/chess/Chessboard";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -16,6 +16,7 @@ import {
   writeDeckProblemId,
 } from "@/lib/trainingDeckCursor";
 import type { TrainingProblem } from "@shared/schema";
+import { TrainingLimitBanner } from "@/components/training/TrainingLimitBanner";
 
 export interface PuzzlePlayerProps {
   problems: TrainingProblem[];
@@ -54,6 +55,7 @@ export function PuzzlePlayer({
   const [startedAt, setStartedAt] = React.useState<number>(Date.now());
   const [hint, setHint] = React.useState(false);
   const { theme: boardTheme } = useBoardTheme();
+  const qc = useQueryClient();
 
   const problemIdsKey = React.useMemo(
     () => problems.map((p) => p.id).join(","),
@@ -111,6 +113,7 @@ export function PuzzlePlayer({
         }),
       }),
     onSuccess: (data) => {
+      void qc.invalidateQueries({ queryKey: ["training", "usage"] });
       if (data.levelUp) {
         toast({
           title: "Level up!",
@@ -119,15 +122,36 @@ export function PuzzlePlayer({
         });
       }
     },
+    onError: (err: Error) => {
+      if (err.message.includes("training_daily_limit")) {
+        toast({
+          title: "Daily puzzle limit reached",
+          description: "Subscribe for unlimited training at /pricing",
+          variant: "destructive",
+        });
+        void qc.invalidateQueries({ queryKey: ["training", "usage"] });
+        return;
+      }
+      if (err.message.includes("training_pro_required")) {
+        toast({
+          title: "Pro trainer",
+          description: "Subscribe at /pricing to unlock this module",
+          variant: "destructive",
+        });
+      }
+    },
   });
 
   if (!problem) {
     return (
-      <Card>
-        <CardContent className="p-8 text-center text-sm text-muted-foreground">
-          No problems in this set yet. Generate some from one of your reviewed games, or import games.
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        <TrainingLimitBanner />
+        <Card>
+          <CardContent className="p-8 text-center text-sm text-muted-foreground">
+            No problems in this set yet. Generate some from one of your reviewed games, or import games.
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -192,6 +216,8 @@ export function PuzzlePlayer({
   const sideToMove = problem.fen.split(" ")[1] === "b" ? "black" : "white";
 
   return (
+    <div className="space-y-3">
+      <TrainingLimitBanner />
     <div className="grid lg:grid-cols-[1fr_320px] gap-4">
       <div className="max-w-[640px]">
         <Chessboard
@@ -262,6 +288,7 @@ export function PuzzlePlayer({
           </CardContent>
         </Card>
       </div>
+    </div>
     </div>
   );
 }

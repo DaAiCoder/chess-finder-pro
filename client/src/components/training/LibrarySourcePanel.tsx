@@ -15,7 +15,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { api } from "@/lib/queryClient";
-import { Database, Sparkles, Loader2 } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { Database, Sparkles, Loader2, Lock } from "lucide-react";
+import { Link } from "wouter";
 
 const MODULES = [
   { id: "tactics", label: "Tactics" },
@@ -40,6 +42,8 @@ const TIERS = [
 ];
 
 export function LibrarySourcePanel() {
+  const { user } = useCurrentUser();
+  const pro = user?.hasProAccess === true;
   const qc = useQueryClient();
   const [module, setModule] = React.useState("tactics");
   const [tier, setTier] = React.useState("");
@@ -95,6 +99,18 @@ export function LibrarySourcePanel() {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        {!pro && (
+          <p className="text-xs rounded-md border border-amber-600/35 bg-amber-950/20 px-3 py-2 text-amber-100/90 flex items-start gap-2">
+            <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+            <span>
+              Generating puzzles from <strong>your</strong> games is a Pro feature. Free accounts
+              can still drill the seed puzzle library in Tactics and 360 Trainer.{" "}
+              <Link href="/pricing" className="underline text-foreground">
+                View Pro
+              </Link>
+            </span>
+          </p>
+        )}
         {empty && (
           <p className="text-xs text-muted-foreground">
             Your local library is empty. Engine-mined puzzles will fall back
@@ -149,7 +165,7 @@ export function LibrarySourcePanel() {
             <Button
               size="sm"
               onClick={() => generate.mutate()}
-              disabled={generate.isPending}
+              disabled={generate.isPending || !pro}
               className="w-full"
             >
               {generate.isPending ? (

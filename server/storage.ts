@@ -123,6 +123,7 @@ export interface IStorage {
 
   recordAttempt(input: InsertTrainingAttempt): Promise<TrainingAttempt>;
   listAttempts(userId: number, problemId?: number): Promise<TrainingAttempt[]>;
+  countAttemptsSince(userId: number, since: Date): Promise<number>;
 
   getProgress(userId: number, module: string): Promise<TrainingProgress | undefined>;
   upsertProgress(input: InsertTrainingProgress): Promise<TrainingProgress>;
@@ -852,6 +853,13 @@ class InMemoryStorage implements IStorage {
     return this.attempts.filter(
       (a) => a.userId === userId && (problemId == null || a.problemId === problemId),
     );
+  }
+  async countAttemptsSince(userId: number, since: Date) {
+    return this.attempts.filter((a) => {
+      if (a.userId !== userId) return false;
+      const t = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+      return t >= since;
+    }).length;
   }
 
   async getProgress(userId: number, module: string) {

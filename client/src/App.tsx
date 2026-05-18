@@ -7,6 +7,7 @@ import { OperatorAuthBoundary } from "@/components/admin/OperatorAuthBoundary";
 import { Toaster } from "@/components/ui/Toaster";
 import { isAdminHost } from "@/lib/adminHost";
 import { RequireAuth } from "@/components/RequireAuth";
+import { RequireTrainingPro } from "@/components/training/RequireTrainingPro";
 import { ConsentBanner } from "@/components/ConsentBanner";
 import { bootstrapConsent, trackPageView } from "@/lib/analytics";
 import { trackInternalPageView } from "@/lib/internalAnalytics";
@@ -206,10 +207,26 @@ export default function App() {
                     path working so deep links and analytics CTAs don't 404. */}
                 <Route path="/training/time-trainer" component={TimePressure} />
                 <Route path="/training/intuition" component={IntuitionTrainer} />
-                <Route path="/training/plan" component={WeeklyPlan} />
-                <Route path="/training/calculation-ladder" component={CalculationLadder} />
-                <Route path="/training/time-pressure" component={TimePressure} />
-                <Route path="/training/repertoire" component={RepertoireTrainer} />
+                <Route path="/training/plan">
+                  <RequireTrainingPro feature="weekly_plan">
+                    <WeeklyPlan />
+                  </RequireTrainingPro>
+                </Route>
+                <Route path="/training/calculation-ladder">
+                  <RequireTrainingPro feature="calculation_ladder">
+                    <CalculationLadder />
+                  </RequireTrainingPro>
+                </Route>
+                <Route path="/training/time-pressure">
+                  <RequireTrainingPro feature="time_pressure">
+                    <TimePressure />
+                  </RequireTrainingPro>
+                </Route>
+                <Route path="/training/repertoire">
+                  <RequireTrainingPro feature="repertoire">
+                    <RepertoireTrainer />
+                  </RequireTrainingPro>
+                </Route>
                 <Route path="/library" component={GameLibrary} />
                 <Route path="/library/games/:id" component={LibraryGameViewer} />
                 <Route path="/watch" component={WatchChannels} />
@@ -235,9 +252,21 @@ export default function App() {
                 <Route path="/legal/terms" component={TermsPage} />
                 <Route path="/legal/refund" component={RefundPage} />
                 <Route path="/legal/contact" component={ContactPage} />
-                <Route path="/training/pawn-structures" component={PawnStructureTrainer} />
-                <Route path="/training/plans" component={PlanFinderTrainer} />
-                <Route path="/training/calculation-studio" component={CalculationStudio} />
+                <Route path="/training/pawn-structures">
+                  <RequireTrainingPro feature="pawn_structures">
+                    <PawnStructureTrainer />
+                  </RequireTrainingPro>
+                </Route>
+                <Route path="/training/plans">
+                  <RequireTrainingPro feature="plan_finder">
+                    <PlanFinderTrainer />
+                  </RequireTrainingPro>
+                </Route>
+                <Route path="/training/calculation-studio">
+                  <RequireTrainingPro feature="calculation_studio">
+                    <CalculationStudio />
+                  </RequireTrainingPro>
+                </Route>
                 <Route component={NotFound} />
               </Switch>
             </MainLayout>

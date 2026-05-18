@@ -16,6 +16,7 @@ import { Link, useSearch } from "wouter";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ArrowDown, ArrowLeft, ArrowUp, Sparkles } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export type WeaknessSlug =
   | "tactics"
@@ -134,7 +135,18 @@ function numberOrNull(v: string | null): number | null {
  *   useQuery(["training", "tactics", ctx.fromAnalytics],
  *     () => api(`/api/training/problems?module=tactics${prioritizeQuery(ctx)}`));
  */
-export function prioritizeQuery(ctx: AnalyticsContext, sourceUserId = 1): string {
-  if (!ctx.fromAnalytics) return "";
+export function prioritizeQuery(
+  ctx: AnalyticsContext,
+  sourceUserId = 1,
+  /** Pro-only: puzzles from the user's imported games first. */
+  allowPersonalized = false,
+): string {
+  if (!ctx.fromAnalytics || !allowPersonalized) return "";
   return `&prioritizeUserGames=true&sourceUserId=${sourceUserId}`;
+}
+
+/** Appends personalized-game filter when analytics deep-link + Pro. */
+export function usePrioritizeQuerySuffix(ctx: AnalyticsContext, sourceUserId = 1): string {
+  const { user } = useCurrentUser();
+  return prioritizeQuery(ctx, sourceUserId, user?.hasProAccess === true);
 }

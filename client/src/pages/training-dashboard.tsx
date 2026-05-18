@@ -23,6 +23,18 @@ import {
   BarChart3,
 } from "lucide-react";
 import type { TrainingProblem, TrainingProgress } from "@shared/schema";
+import { TrainingLimitBanner } from "@/components/training/TrainingLimitBanner";
+import { Lock } from "lucide-react";
+
+const PRO_HREFS = new Set([
+  "/training/plan",
+  "/training/repertoire",
+  "/training/calculation-ladder",
+  "/training/time-pressure",
+  "/training/pawn-structures",
+  "/training/plans",
+  "/training/calculation-studio",
+]);
 
 const MODULES = [
   { id: "tactics", name: "Tactics", desc: "Find the winning move from your real blunders.", icon: Sparkles, href: "/training/tactics" },
@@ -49,9 +61,12 @@ export default function TrainingDashboard() {
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">
       <WeaknessBanner />
+      <TrainingLimitBanner />
       <div>
         <h1 className="text-2xl font-bold">Training</h1>
-        <p className="text-muted-foreground text-sm">Pick a module and grind out a few rated problems.</p>
+        <p className="text-muted-foreground text-sm">
+          Free: daily puzzle cap on core trainers. Pro: unlimited + training from your games.
+        </p>
       </div>
 
       <WeaknessMap />
@@ -64,7 +79,12 @@ export default function TrainingDashboard() {
             <CardHeader className="flex-row items-center gap-3">
               <Calendar className="w-5 h-5 text-primary" />
               <div>
-                <CardTitle className="text-base">Weekly Plan</CardTitle>
+                <CardTitle className="text-base flex items-center gap-2">
+                  Weekly Plan
+                  <Badge variant="outline" className="text-[10px]">
+                    <Lock className="w-3 h-3 mr-0.5" /> Pro
+                  </Badge>
+                </CardTitle>
                 <CardDescription>7-day schedule built from your weakest skills.</CardDescription>
               </div>
             </CardHeader>
@@ -102,6 +122,7 @@ export default function TrainingDashboard() {
         {MODULES.map((m) => {
           const prog = byModule.get(m.id);
           const Icon = m.icon;
+          const isPro = PRO_HREFS.has(m.href);
           return (
             <Link key={m.id} href={m.href}>
               <Card className="hover:border-primary transition-colors cursor-pointer">
@@ -109,7 +130,16 @@ export default function TrainingDashboard() {
                   <div className="flex items-center gap-3">
                     <Icon className="w-5 h-5 text-primary" />
                     <CardTitle className="text-base">{m.name}</CardTitle>
-                    {prog && <Badge variant="outline" className="ml-auto font-mono">{prog.rating}</Badge>}
+                    {isPro && (
+                      <Badge variant="outline" className="ml-auto text-[10px]">
+                        <Lock className="w-3 h-3 mr-0.5" /> Pro
+                      </Badge>
+                    )}
+                    {prog && !isPro && (
+                      <Badge variant="outline" className="ml-auto font-mono">
+                        {prog.rating}
+                      </Badge>
+                    )}
                   </div>
                   <CardDescription>{m.desc}</CardDescription>
                 </CardHeader>

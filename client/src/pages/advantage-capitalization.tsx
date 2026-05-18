@@ -3,18 +3,18 @@ import { PuzzlePlayer } from "@/components/chess/PuzzlePlayer";
 import { Card, CardContent } from "@/components/ui/Card";
 import { api } from "@/lib/queryClient";
 import {
-  prioritizeQuery,
   useAnalyticsContext,
+  usePrioritizeQuerySuffix,
   WeaknessBanner,
 } from "@/components/training/WeaknessBanner";
 import type { TrainingProblem } from "@shared/schema";
 
 export default function AdvantageCapitalization() {
   const ctx = useAnalyticsContext();
+  const prioritize = usePrioritizeQuerySuffix(ctx);
   const all = useQuery<TrainingProblem[]>({
-    queryKey: ["training", "advantage-capitalization", ctx.fromAnalytics],
-    queryFn: () =>
-      api(`/api/training/problems?module=advantage-capitalization${prioritizeQuery(ctx)}`),
+    queryKey: ["training", "advantage-capitalization", ctx.fromAnalytics, prioritize],
+    queryFn: () => api(`/api/training/problems?module=advantage-capitalization${prioritize}`),
   });
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-4">

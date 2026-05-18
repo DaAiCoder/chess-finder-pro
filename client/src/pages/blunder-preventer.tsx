@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/queryClient";
 import { toast } from "@/components/ui/Toaster";
 import {
-  prioritizeQuery,
   useAnalyticsContext,
+  usePrioritizeQuerySuffix,
   WeaknessBanner,
 } from "@/components/training/WeaknessBanner";
 import { CheckCircle2, ChevronRight, XCircle } from "lucide-react";
@@ -15,10 +15,10 @@ import type { TrainingProblem } from "@shared/schema";
 
 export default function BlunderPreventer() {
   const ctx = useAnalyticsContext();
+  const prioritize = usePrioritizeQuerySuffix(ctx);
   const all = useQuery<TrainingProblem[]>({
-    queryKey: ["training", "blunder-preventer", ctx.fromAnalytics],
-    queryFn: () =>
-      api(`/api/training/problems?module=blunder-preventer${prioritizeQuery(ctx)}`),
+    queryKey: ["training", "blunder-preventer", ctx.fromAnalytics, prioritize],
+    queryFn: () => api(`/api/training/problems?module=blunder-preventer${prioritize}`),
   });
   const [idx, setIdx] = React.useState(0);
   const [answered, setAnswered] = React.useState<string | null>(null);

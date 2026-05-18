@@ -87,7 +87,17 @@ import { runOnce as runGeneratorCronOnce } from "./services/generatorCron.js";
 import { listDue as listDueSrs, schedule as scheduleSrs } from "./services/srsScheduler.js";
 import { computeWeaknesses } from "./services/weaknessProfile.js";
 import { renderOpponentReportHtml } from "./services/opponentReport.js";
-import { currentUserId } from "./auth.js";
+import { currentUserId, getCurrentUser } from "./auth.js";
+import {
+  TRAINING_RETRY_FREE_LIMIT,
+  getTrainingUsage,
+  hasUnlimitedTraining,
+  isProOnlyTrainingModule,
+  sendTrainingDailyLimit,
+  sendTrainingProRequired,
+  countTrainingAttemptsToday,
+  trainingDailyLimit,
+} from "./trainingAccess.js";
 import { pickCalculationProblem } from "./services/calculationLadderGenerator.js";
 import { pickTimePressureProblem } from "./services/timePressureGenerator.js";
 import { ingestRepertoirePgn } from "./services/repertoireBuilder.js";
@@ -990,11 +1000,29 @@ export function registerRoutes(app: Express) {
   /* -------------------------------------------------------------------- */
   /* Training problems                                                     */
   /* -------------------------------------------------------------------- */
+  app.get("/api/training/usage", async (req, res) => {
+    try {
+      const userId = currentUserId(req);
+      const user = await getCurrentUser(req);
+      res.json(await getTrainingUsage(user, userId));
+    } catch (err) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  });
+
   app.get("/api/training/problems", async (req, res) => {
     const filter: { module?: string; tacticType?: string; difficulty?: number } = {};
     if (typeof req.query.module === "string") filter.module = req.query.module;
     if (typeof req.query.tacticType === "string") filter.tacticType = req.query.tacticType;
     if (typeof req.query.difficulty === "string") filter.difficulty = Number(req.query.difficulty);
+
+    if (filter.module && isProOnlyTrainingModule(filter.module)) {
+      const user = await getCurrentUser(req);
+      if (!hasUnlimitedTraining(user)) {
+        sendTrainingProRequired(res, "plan_finder");
+        return;
+      }
+    }
 
     const problems = await storage.listTrainingProblems(filter);
 
@@ -1003,6 +1031,13 @@ export function registerRoutes(app: Express) {
     // personal. Falls back to the full pool order otherwise.
     const prioritize = req.query.prioritizeUserGames === "true";
     const sourceUserId = Number(req.query.sourceUserId);
+    if (prioritize) {
+      const user = await getCurrentUser(req);
+      if (!hasUnlimitedTraining(user)) {
+        sendTrainingProRequired(res, "personalized_problems");
+        return;
+      }
+    }
     if (prioritize && Number.isFinite(sourceUserId)) {
       const myGames = await storage.listGames(sourceUserId);
       const myGameIds = new Set(myGames.map((g) => g.id));
@@ -1025,6 +1060,13 @@ export function registerRoutes(app: Express) {
     if (!p) {
       res.status(404).json({ error: "not found" });
       return;
+    }
+    if (isProOnlyTrainingModule(p.module)) {
+      const user = await getCurrentUser(req);
+      if (!hasUnlimitedTraining(user)) {
+        sendTrainingProRequired(res, "plan_finder");
+        return;
+      }
     }
     res.json(p);
   });
@@ -1098,7 +1140,12 @@ export function registerRoutes(app: Express) {
   });
 
   // Pawn-structure catalogue: overview / plans / breaks / drills per structure.
-  app.get("/api/training/pawn-structures", async (_req, res) => {
+  app.get("/api/training/pawn-structures", async (req, res) => {
+    const user = await getCurrentUser(req);
+    if (!hasUnlimitedTraining(user)) {
+      sendTrainingProRequired(res, "pawn_structures");
+      return;
+    }
     try {
       const { listPawnStructures } = await import("./data/pawnStructures.js");
       res.json(listPawnStructures());
@@ -1108,6 +1155,11 @@ export function registerRoutes(app: Express) {
   });
 
   app.get("/api/training/pawn-structures/:id", async (req, res) => {
+    const user = await getCurrentUser(req);
+    if (!hasUnlimitedTraining(user)) {
+      sendTrainingProRequired(res, "pawn_structures");
+      return;
+    }
     try {
       const { findPawnStructure } = await import("./data/pawnStructures.js");
       const s = findPawnStructure(req.params.id);
@@ -1119,7 +1171,12 @@ export function registerRoutes(app: Express) {
   });
 
   // Strategic-plan catalogue: MCQ + canonical play-out.
-  app.get("/api/training/plans", async (_req, res) => {
+  app.get("/api/training/plans", async (req, res) => {
+    const user = await getCurrentUser(req);
+    if (!hasUnlimitedTraining(user)) {
+      sendTrainingProRequired(res, "plan_finder");
+      return;
+    }
     try {
       const { listStrategicPlans } = await import("./data/strategicPlans.js");
       res.json(listStrategicPlans());
@@ -1129,6 +1186,11 @@ export function registerRoutes(app: Express) {
   });
 
   app.get("/api/training/plans/:id", async (req, res) => {
+    const user = await getCurrentUser(req);
+    if (!hasUnlimitedTraining(user)) {
+      sendTrainingProRequired(res, "plan_finder");
+      return;
+    }
     try {
       const { findStrategicPlan } = await import("./data/strategicPlans.js");
       const p = findStrategicPlan(req.params.id);
@@ -1140,7 +1202,12 @@ export function registerRoutes(app: Express) {
   });
 
   // Calculation Studio — multi-move forcing lines (blind sequence entry).
-  app.get("/api/training/calculation-studio", async (_req, res) => {
+  app.get("/api/training/calculation-studio", async (req, res) => {
+    const user = await getCurrentUser(req);
+    if (!hasUnlimitedTraining(user)) {
+      sendTrainingProRequired(res, "calculation_studio");
+      return;
+    }
     try {
       const { listCalculationStudio } = await import("./data/calculationStudio.js");
       res.json(listCalculationStudio());
@@ -1150,6 +1217,11 @@ export function registerRoutes(app: Express) {
   });
 
   app.get("/api/training/calculation-studio/:id", async (req, res) => {
+    const user = await getCurrentUser(req);
+    if (!hasUnlimitedTraining(user)) {
+      sendTrainingProRequired(res, "calculation_studio");
+      return;
+    }
     try {
       const { findCalculationStudy } = await import("./data/calculationStudio.js");
       const s = findCalculationStudy(req.params.id);
@@ -1201,6 +1273,23 @@ export function registerRoutes(app: Express) {
     });
     const data = schema.parse(req.body);
     const userId = currentUserId(req);
+    const user = await getCurrentUser(req);
+
+    const problem = await storage.getTrainingProblem(data.problemId);
+    if (problem && isProOnlyTrainingModule(problem.module) && !hasUnlimitedTraining(user)) {
+      sendTrainingProRequired(res, "plan_finder");
+      return;
+    }
+
+    if (!hasUnlimitedTraining(user)) {
+      const used = await countTrainingAttemptsToday(userId);
+      const limit = trainingDailyLimit(user);
+      if (used >= limit) {
+        sendTrainingDailyLimit(res, used, limit);
+        return;
+      }
+    }
+
     const attempt = await storage.recordAttempt({ ...data, userId });
 
     let levelUp = false;
@@ -1252,10 +1341,10 @@ export function registerRoutes(app: Express) {
       console.warn("[training/attempt] streak bookkeeping failed:", (err as Error).message);
     }
 
-    const problem = await storage.getTrainingProblem(data.problemId);
-    if (problem) {
+    const problemForProgress = problem ?? (await storage.getTrainingProblem(data.problemId));
+    if (problemForProgress) {
       const cur =
-        (await storage.getProgress(userId, problem.module)) ?? {
+        (await storage.getProgress(userId, problemForProgress.module)) ?? {
           rating: 1200,
           problemsSolved: 0,
           totalAttempts: 0,
@@ -1268,7 +1357,7 @@ export function registerRoutes(app: Express) {
       const rating = Math.max(400, Math.min(3000, cur.rating + ratingDelta));
       await storage.upsertProgress({
         userId,
-        module: problem.module,
+        module: problemForProgress.module,
         rating,
         problemsSolved,
         totalAttempts,
@@ -1278,18 +1367,18 @@ export function registerRoutes(app: Express) {
 
       // Phase 1.3 — schedule into SRS. Every attempt = one update.
       try {
-        await scheduleSrs(userId, problem.id, data.solved ? "pass" : "fail");
+        await scheduleSrs(userId, problemForProgress.id, data.solved ? "pass" : "fail");
       } catch (err) {
         console.warn("[srs] schedule failed:", (err as Error).message);
       }
 
       // Phase 1.1 — update motif skill if the problem has a tacticType.
-      if (problem.tacticType) {
+      if (problemForProgress.tacticType) {
         try {
           await recordMotifAttempt(
             userId,
-            problem.tacticType,
-            problem.difficulty,
+            problemForProgress.tacticType,
+            problemForProgress.difficulty,
             data.solved,
           );
         } catch (err) {
@@ -1300,8 +1389,8 @@ export function registerRoutes(app: Express) {
       try {
         await recordSkillRatingAttempt(
           userId,
-          moduleSkillKey(problem.module),
-          problem.difficulty,
+          moduleSkillKey(problemForProgress.module),
+          problemForProgress.difficulty,
           data.solved,
         );
       } catch (err) {
@@ -1324,9 +1413,14 @@ export function registerRoutes(app: Express) {
     const userId = req.query.userId
       ? Number(req.query.userId)
       : currentUserId(req);
+    const user = await getCurrentUser(req);
+    const pro = hasUnlimitedTraining(user);
+    const maxLimit = pro ? 200 : TRAINING_RETRY_FREE_LIMIT;
     const limit = req.query.limit
-      ? Math.max(1, Math.min(200, Number(req.query.limit)))
-      : 50;
+      ? Math.max(1, Math.min(maxLimit, Number(req.query.limit)))
+      : pro
+        ? 50
+        : TRAINING_RETRY_FREE_LIMIT;
 
     const attempts = await storage.listAttempts(userId);
     // Latest attempt per problemId.
@@ -1781,6 +1875,11 @@ function registerPhase1Routes(app: Express) {
   /* ---- 1.3 SRS ---- */
   app.get("/api/srs/due", async (req, res) => {
     try {
+      const user = await getCurrentUser(req);
+      if (!hasUnlimitedTraining(user)) {
+        sendTrainingProRequired(res, "srs_review");
+        return;
+      }
       const userId = currentUserId(req);
       const limit = Math.min(50, Number(req.query.limit ?? 25));
       const cards = await listDueSrs(userId, limit);
@@ -1881,6 +1980,11 @@ function registerPhase3Routes(app: Express) {
   /* ---- 3.1 calculation ladder ---- */
   app.get("/api/training/calculation-ladder", async (req, res) => {
     try {
+      const user = await getCurrentUser(req);
+      if (!hasUnlimitedTraining(user)) {
+        sendTrainingProRequired(res, "calculation_ladder");
+        return;
+      }
       const userId = currentUserId(req);
       const rung = Math.max(1, Math.min(10, Number(req.query.rung ?? 1)));
       const problem = await pickCalculationProblem(userId, rung);
@@ -1893,6 +1997,11 @@ function registerPhase3Routes(app: Express) {
   /* ---- 3.2 time pressure ---- */
   app.get("/api/training/time-pressure", async (req, res) => {
     try {
+      const user = await getCurrentUser(req);
+      if (!hasUnlimitedTraining(user)) {
+        sendTrainingProRequired(res, "time_pressure");
+        return;
+      }
       const userId = currentUserId(req);
       const problem = await pickTimePressureProblem(userId);
       res.json({ problem });
@@ -1903,6 +2012,11 @@ function registerPhase3Routes(app: Express) {
 
   /* ---- 3.3 repertoire ---- */
   app.get("/api/repertoires", async (req, res) => {
+    const user = await getCurrentUser(req);
+    if (!hasUnlimitedTraining(user)) {
+      sendTrainingProRequired(res, "repertoire");
+      return;
+    }
     const userId = currentUserId(req);
     const list = await storage.listRepertoires(userId);
     res.json({ repertoires: list });
@@ -1910,6 +2024,11 @@ function registerPhase3Routes(app: Express) {
 
   app.post("/api/repertoires", async (req, res) => {
     try {
+      const user = await getCurrentUser(req);
+      if (!hasUnlimitedTraining(user)) {
+        sendTrainingProRequired(res, "repertoire");
+        return;
+      }
       const schema = z.object({
         name: z.string().min(1),
         color: z.enum(["white", "black"]),
@@ -2338,6 +2457,11 @@ function registerPhase5Routes(app: Express) {
    */
   app.post("/api/library/generate-training", async (req, res) => {
     try {
+      const user = await getCurrentUser(req);
+      if (!hasUnlimitedTraining(user)) {
+        sendTrainingProRequired(res, "library_generate");
+        return;
+      }
       const schema = z.object({
         module: z.enum([
           "tactics",

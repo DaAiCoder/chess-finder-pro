@@ -6,18 +6,18 @@ import { Label } from "@/components/ui/Label";
 import { Card, CardContent } from "@/components/ui/Card";
 import { api } from "@/lib/queryClient";
 import {
-  prioritizeQuery,
   useAnalyticsContext,
+  usePrioritizeQuerySuffix,
   WeaknessBanner,
 } from "@/components/training/WeaknessBanner";
 import type { TrainingProblem } from "@shared/schema";
 
 export default function TacticsTrainer() {
   const ctx = useAnalyticsContext();
+  const prioritize = usePrioritizeQuerySuffix(ctx);
   const all = useQuery<TrainingProblem[]>({
-    queryKey: ["training", "tactics", ctx.fromAnalytics],
-    queryFn: () =>
-      api(`/api/training/problems?module=tactics${prioritizeQuery(ctx)}`),
+    queryKey: ["training", "tactics", ctx.fromAnalytics, prioritize],
+    queryFn: () => api(`/api/training/problems?module=tactics${prioritize}`),
   });
   const [tacticType, setTacticType] = React.useState<string>("any");
 

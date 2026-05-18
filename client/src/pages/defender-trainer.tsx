@@ -3,8 +3,8 @@ import { PuzzlePlayer } from "@/components/chess/PuzzlePlayer";
 import { Card, CardContent } from "@/components/ui/Card";
 import { api } from "@/lib/queryClient";
 import {
-  prioritizeQuery,
   useAnalyticsContext,
+  usePrioritizeQuerySuffix,
   WeaknessBanner,
 } from "@/components/training/WeaknessBanner";
 import { ShieldAlert } from "lucide-react";
@@ -12,10 +12,10 @@ import type { TrainingProblem } from "@shared/schema";
 
 export default function DefenderTrainer() {
   const ctx = useAnalyticsContext();
+  const prioritize = usePrioritizeQuerySuffix(ctx);
   const all = useQuery<TrainingProblem[]>({
-    queryKey: ["training", "defender", ctx.fromAnalytics],
-    queryFn: () =>
-      api(`/api/training/problems?module=defender${prioritizeQuery(ctx)}`),
+    queryKey: ["training", "defender", ctx.fromAnalytics, prioritize],
+    queryFn: () => api(`/api/training/problems?module=defender${prioritize}`),
   });
 
   return (

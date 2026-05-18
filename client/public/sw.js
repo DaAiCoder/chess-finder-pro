@@ -1,14 +1,13 @@
-/* Self-destructing service worker.
+/* Self-destructing service worker (v2).
  *
  * The previous SW we shipped did stale-while-revalidate of Vite's dev
  * modules and trapped users on a blank loading screen. This replacement
- * does nothing on `fetch` (so the network is always used), unregisters
- * itself on activate, and clears every cache it can find. Browsers
- * check /sw.js for updates on navigation, so installing this once is
- * enough to free a stuck client.
+ * unregisters itself on activate and clears every cache it can find.
+ * No `fetch` handler — intercepting navigation adds overhead and triggers
+ * browser warnings when the handler is a no-op.
  *
- * A real PWA SW can come back later — but only when registered from a
- * production build, never from `npm run dev`.
+ * Browsers check /sw.js for updates on navigation, so installing this once
+ * is enough to free a stuck client.
  */
 
 self.addEventListener("install", () => {
@@ -32,7 +31,6 @@ self.addEventListener("activate", (event) => {
       try {
         const clients = await self.clients.matchAll({ type: "window" });
         for (const client of clients) {
-          // Force a reload so the page comes back without our intercept.
           client.navigate(client.url).catch(() => {
             /* ignore */
           });
@@ -42,8 +40,4 @@ self.addEventListener("activate", (event) => {
       }
     })(),
   );
-});
-
-self.addEventListener("fetch", () => {
-  /* no-op: let the browser go to the network */
 });

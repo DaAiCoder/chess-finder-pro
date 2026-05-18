@@ -22,15 +22,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 // purge its caches — that auto-heals anyone who already has a stuck SW
 // from a previous session.
 if ("serviceWorker" in navigator) {
-  if (import.meta.env.PROD) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker
-        .register("/sw.js", { scope: "/" })
-        .catch(() => {
-          /* offline shell is best-effort */
-        });
-    });
-  } else {
+  const purgeServiceWorkersAndCaches = () => {
     navigator.serviceWorker
       .getRegistrations()
       .then((regs) => Promise.all(regs.map((r) => r.unregister())))
@@ -45,5 +37,17 @@ if ("serviceWorker" in navigator) {
           /* ignore */
         });
     }
+  };
+
+  if (import.meta.env.PROD) {
+    // Register once so browsers with the old broken SW fetch updated sw.js (no fetch
+    // handler); activate clears caches and unregisters. Do not purge immediately here.
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
+        /* ignore */
+      });
+    });
+  } else {
+    purgeServiceWorkersAndCaches();
   }
 }

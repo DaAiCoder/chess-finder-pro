@@ -10,7 +10,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { isSignedInUser, useCurrentUser } from "@/hooks/useCurrentUser";
 import { api } from "@/lib/queryClient";
 
 /** Rotating placeholders for the header “Ask Tal” search; submit uses the visible line if the box is empty. */
@@ -127,9 +127,10 @@ interface StreakResponse {
 
 function TopNavStatus() {
   const { user } = useCurrentUser();
+  const signedIn = isSignedInUser(user);
   const streak = useQuery<StreakResponse | null>({
     queryKey: ["streak", user?.id],
-    enabled: !!user,
+    enabled: signedIn,
     queryFn: () => api<StreakResponse | null>("/api/streak"),
     staleTime: 30_000,
   });
@@ -142,30 +143,36 @@ function TopNavStatus() {
 
   return (
     <div className="flex items-center gap-2 text-xs shrink-0">
-      <Link
-        href="/training"
-        className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-md bg-secondary/60 hover:bg-secondary border border-border/60 text-foreground/90"
-        title={`${days}-day streak — longest ${streak.data?.longestStreak ?? 0}`}
-      >
-        <Flame className={cn("w-3.5 h-3.5", days > 0 ? "text-orange-400" : "text-muted-foreground")} />
-        <span className="font-medium">{days}</span>
-      </Link>
-      <Link
-        href="/statistics"
-        className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-md bg-secondary/60 hover:bg-secondary border border-border/60 text-foreground/90"
-        title={`Level ${level} — ${xpThis}/500 XP to next`}
-      >
-        <Trophy className="w-3.5 h-3.5 text-amber-400" />
-        <span className="font-medium">Lv {level}</span>
-        <span className="hidden md:inline w-12 h-1 rounded bg-border overflow-hidden">
-          <span
-            className="block h-full bg-amber-400 transition-all"
-            style={{ width: `${xpPct}%` }}
-          />
-        </span>
-      </Link>
+      {signedIn && (
+        <>
+          <Link
+            href="/training"
+            className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-md bg-secondary/60 hover:bg-secondary border border-border/60 text-foreground/90"
+            title={`${days}-day streak — longest ${streak.data?.longestStreak ?? 0}`}
+          >
+            <Flame
+              className={cn("w-3.5 h-3.5", days > 0 ? "text-orange-400" : "text-muted-foreground")}
+            />
+            <span className="font-medium">{days}</span>
+          </Link>
+          <Link
+            href="/statistics"
+            className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-md bg-secondary/60 hover:bg-secondary border border-border/60 text-foreground/90"
+            title={`Level ${level} — ${xpThis}/500 XP to next`}
+          >
+            <Trophy className="w-3.5 h-3.5 text-amber-400" />
+            <span className="font-medium">Lv {level}</span>
+            <span className="hidden md:inline w-12 h-1 rounded bg-border overflow-hidden">
+              <span
+                className="block h-full bg-amber-400 transition-all"
+                style={{ width: `${xpPct}%` }}
+              />
+            </span>
+          </Link>
+        </>
+      )}
       <UserBadge user={user} />
-    </div>
+    </motion.div>
   );
 }
 

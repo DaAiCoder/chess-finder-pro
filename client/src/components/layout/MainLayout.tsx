@@ -30,6 +30,7 @@ import {
   Swords,
   Target,
   Timer,
+  Trophy,
   TrendingUp,
   Upload,
   X,

@@ -2,7 +2,6 @@ import * as React from "react";
 import { Switch, Route, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { AccountLayout } from "@/components/layout/AccountLayout";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { OperatorAuthBoundary } from "@/components/admin/OperatorAuthBoundary";
 import { Toaster } from "@/components/ui/Toaster";
@@ -155,16 +154,6 @@ export default function App() {
           {/* Headless render route — no sidebar chrome, deterministic
               1080p layout for the MP4 export pipeline. */}
           <Route path="/watch/render" component={WatchRender} />
-          <Route path="/account/billing">
-            <AccountLayout>
-              <AccountBillingPage />
-            </AccountLayout>
-          </Route>
-          <Route path="/account">
-            <AccountLayout>
-              <AccountPage />
-            </AccountLayout>
-          </Route>
           {/* Marketing home — no app sidebar (landing has its own top bar) */}
           <Route path="/" component={Home} />
           <Route>
@@ -240,6 +229,8 @@ export default function App() {
                 <Route path="/signup" component={LoginPage} />
                 <Route path="/pricing" component={PricingPage} />
                 <Route path="/thanks" component={ThanksPage} />
+                <Route path="/account/billing" component={AccountBillingPage} />
+                <Route path="/account" component={AccountPage} />
                 <Route path="/legal/privacy" component={PrivacyPage} />
                 <Route path="/legal/terms" component={TermsPage} />
                 <Route path="/legal/refund" component={RefundPage} />

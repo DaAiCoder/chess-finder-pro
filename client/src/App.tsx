@@ -53,6 +53,8 @@ const PricingPage = React.lazy(() => import("@/pages/pricing"));
 const ThanksPage = React.lazy(() => import("@/pages/thanks"));
 const AccountBillingPage = React.lazy(() => import("@/pages/account-billing"));
 const AccountPage = React.lazy(() => import("@/pages/account"));
+const ResetPasswordPage = React.lazy(() => import("@/pages/reset-password"));
+const EmailChangePage = React.lazy(() => import("@/pages/email-change"));
 const PrivacyPage = React.lazy(() => import("@/pages/legal/privacy"));
 const TermsPage = React.lazy(() => import("@/pages/legal/terms"));
 const RefundPage = React.lazy(() => import("@/pages/legal/refund"));
@@ -244,6 +246,8 @@ export default function App() {
                 </Route>
                 <Route path="/login" component={LoginPage} />
                 <Route path="/signup" component={LoginPage} />
+                <Route path="/reset-password" component={ResetPasswordPage} />
+                <Route path="/email-change" component={EmailChangePage} />
                 <Route path="/pricing" component={PricingPage} />
                 <Route path="/thanks" component={ThanksPage} />
                 <Route path="/account/billing" component={AccountBillingPage} />

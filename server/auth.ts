@@ -38,11 +38,26 @@ import { randomBytes, createHash } from "node:crypto";
 import { DUMMY_SCRYPT_HASH, hashPassword, verifyPassword } from "./password.js";
 import { z } from "zod";
 import helmet from "helmet";
-import { sendMagicLinkEmail } from "./services/transactionalEmail.js";
+import {
+  sendEmailSafe,
+  sendEmailChangeVerifyEmail,
+  sendEmailChangedNotice,
+  sendMagicLinkEmail,
+  sendPasswordChangedEmail,
+  sendPasswordResetEmail,
+  sendWelcomeEmail,
+  notifyAdminUserSignup,
+} from "./services/transactionalEmail.js";
+import { createAuthToken, consumeAuthToken } from "./services/authTokens.js";
 import { storage } from "./storage.js";
 import type { User } from "../shared/schema.js";
 import { isCommonPassword } from "./services/commonPasswords.js";
-import { proAccessPayload, userHasProAccess, isAnonymousUsername } from "./accessPolicy.js";
+import { proAccessPayload, userHasProAccess, isAnonymousUsername, isComplimentaryUser } from "./accessPolicy.js";
+import {
+  recordLoginFailure,
+  recordSignupFromIp,
+  notifyAdminComplimentaryGranted,
+} from "./services/opsAlerts.js";
 
 /* ---------------------------------------------------------------------- */
 /* Module augmentation: extend express-session SessionData                 */
@@ -70,11 +85,15 @@ const IS_PROD = process.env.NODE_ENV === "production";
 const COOKIE_NAME = IS_PROD ? "__Host-cfpsid" : "cfpsid";
 
 const MAGIC_TTL_MS = 15 * 60 * 1000;
+const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
+const EMAIL_CHANGE_TTL_MS = 24 * 60 * 60 * 1000;
 const LOGIN_LOCKOUT_MAX = 8;
 const LOGIN_LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
 const MAGIC_EMAIL_COOLDOWN_MS = 60_000;
 const MAGIC_IP_PER_HOUR = 20;
 const REGISTER_IP_PER_HOUR = 10;
+const RESET_IP_PER_HOUR = 15;
+const EMAIL_CHANGE_COOLDOWN_MS = 120_000;
 
 const LICHESS_AUTH = "https://lichess.org/oauth";
 const LICHESS_TOKEN = "https://lichess.org/api/token";
@@ -237,6 +256,9 @@ const loginFailsByIp = new Map<string, Bucket>();
 const loginFailsByEmail = new Map<string, Bucket>();
 const magicHitsByIp = new Map<string, Bucket>();
 const magicLastByEmail = new Map<string, number>();
+const resetLastByEmail = new Map<string, number>();
+const resetHitsByIp = new Map<string, Bucket>();
+const emailChangeLastByUser = new Map<number, number>();
 const registerHitsByIp = new Map<string, Bucket>();
 
 function reqIp(req: Request): string {
@@ -273,44 +295,6 @@ function safeRedirectPath(next: string | undefined): string {
   return t;
 }
 
-/* ---------------------------------------------------------------------- */
-/* Magic-link tokens (hashed at rest)                                      */
-/* ---------------------------------------------------------------------- */
-
-interface MagicEntry {
-  email: string;
-  exp: number;
-}
-const magicTokens = new Map<string, MagicEntry>();
-
-function sha256Hex(s: string): string {
-  return createHash("sha256").update(s).digest("hex");
-}
-
-function storeMagicToken(rawToken: string, email: string): void {
-  const key = sha256Hex(rawToken);
-  magicTokens.set(key, { email, exp: Date.now() + MAGIC_TTL_MS });
-}
-
-function consumeMagicToken(rawToken: string): string | null {
-  const key = sha256Hex(rawToken);
-  pruneMagicTokens();
-  const row = magicTokens.get(key);
-  if (!row || row.exp < Date.now()) {
-    magicTokens.delete(key);
-    return null;
-  }
-  magicTokens.delete(key);
-  return row.email;
-}
-
-function pruneMagicTokens(): void {
-  const now = Date.now();
-  for (const [k, v] of magicTokens) {
-    if (v.exp < now) magicTokens.delete(k);
-  }
-}
-
 async function uniqueUsernameFromEmail(email: string): Promise<string> {
   const local = email.split("@")[0] ?? "player";
   const base = local
@@ -326,6 +310,18 @@ async function uniqueUsernameFromEmail(email: string): Promise<string> {
     candidate = `${(base || "player").slice(0, 22)}_${n}`;
   }
   return candidate;
+}
+
+async function maybeNotifyComplimentary(u: User): Promise<void> {
+  if (!isComplimentaryUser(u)) return;
+  const prefs = (u.preferences as Record<string, unknown> | null) ?? {};
+  if (prefs.complimentaryAdminNotified) return;
+  notifyAdminComplimentaryGranted({
+    userId: u.id,
+    username: u.username,
+    email: u.email ?? null,
+  });
+  await storage.updateUserPreferences(u.id, { complimentaryAdminNotified: true });
 }
 
 /* ---------------------------------------------------------------------- */
@@ -354,6 +350,7 @@ export function registerAuthRoutes(app: Express): void {
       });
     }
     const access = proAccessPayload(u);
+    void maybeNotifyComplimentary(u);
     res.json({
       authenticated: true,
       anonymous: false,
@@ -409,6 +406,7 @@ export function registerAuthRoutes(app: Express): void {
     }
     try {
       const hash = await hashPassword(password);
+      const ip = reqIp(req);
       const user = await storage.createUser({
         username: lower,
         password: hash,
@@ -421,6 +419,21 @@ export function registerAuthRoutes(app: Express): void {
         req.session.userId = user.id;
         req.session.save((e) => {
           if (e) return res.status(500).json({ error: "session_save_failed" });
+          if (emailNorm) {
+            sendEmailSafe("welcome", () =>
+              sendWelcomeEmail({ to: emailNorm, username: user.username, method: "email" }),
+            );
+          }
+          sendEmailSafe("admin-signup", () =>
+            notifyAdminUserSignup({
+              userId: user.id,
+              username: user.username,
+              email: emailNorm ?? null,
+              method: "email",
+              ip,
+            }),
+          );
+          recordSignupFromIp(ip, user.username, user.id);
           res.json({ ok: true, id: user.id, username: user.username });
         });
       });
@@ -453,6 +466,7 @@ export function registerAuthRoutes(app: Express): void {
         if (!user) {
           pushHit(loginFailsByIp, ip, LOGIN_LOCKOUT_WINDOW_MS, LOGIN_LOCKOUT_MAX + 10);
           if (rawEmail) pushHit(loginFailsByEmail, rawEmail, LOGIN_LOCKOUT_WINDOW_MS, LOGIN_LOCKOUT_MAX + 10);
+          recordLoginFailure(ip);
           return res.status(401).json({ error: "invalid_credentials" });
         }
         // Clear failure buckets on success.
@@ -529,6 +543,9 @@ export function registerAuthRoutes(app: Express): void {
     }
     const hash = await hashPassword(body.data.newPassword);
     await storage.updateUserPassword(u.id, hash);
+    if (u.email) {
+      sendEmailSafe("password-changed", () => sendPasswordChangedEmail({ to: u.email! }));
+    }
     res.json({ ok: true });
   });
 
@@ -554,8 +571,7 @@ export function registerAuthRoutes(app: Express): void {
       }
       magicLastByEmail.set(email, Date.now());
 
-      const token = randomBytes(32).toString("base64url");
-      storeMagicToken(token, email);
+      const token = createAuthToken({ purpose: "magic_signin", email }, MAGIC_TTL_MS);
 
       const magicUrl = `${publicOrigin(req)}/api/auth/magic-link/consume?token=${encodeURIComponent(token)}&next=${encodeURIComponent(next)}`;
       try {
@@ -577,13 +593,16 @@ export function registerAuthRoutes(app: Express): void {
     if (!token) {
       return res.redirect(`${publicOrigin(req)}/login?error=magic_invalid`);
     }
-    const email = consumeMagicToken(token);
-    if (!email) {
+    const payload = consumeAuthToken(token, "magic_signin");
+    if (!payload) {
       return res.redirect(`${publicOrigin(req)}/login?error=magic_invalid`);
     }
+    const email = payload.email;
     try {
       let user = await storage.getUserByEmail(email);
+      let isNewUser = false;
       if (!user) {
+        isNewUser = true;
         const uname = await uniqueUsernameFromEmail(email);
         user = await storage.createUser({
           username: uname,
@@ -593,6 +612,22 @@ export function registerAuthRoutes(app: Express): void {
         });
       } else if (!user.email) {
         await storage.updateUserEmail(user.id, email);
+      }
+      if (isNewUser) {
+        const ip = reqIp(req);
+        sendEmailSafe("welcome", () =>
+          sendWelcomeEmail({ to: email, username: user!.username, method: "magic_link" }),
+        );
+        sendEmailSafe("admin-signup", () =>
+          notifyAdminUserSignup({
+            userId: user!.id,
+            username: user!.username,
+            email,
+            method: "magic_link",
+            ip,
+          }),
+        );
+        recordSignupFromIp(ip, user!.username, user!.id);
       }
       req.session.regenerate((err) => {
         if (err) {
@@ -610,6 +645,195 @@ export function registerAuthRoutes(app: Express): void {
     } catch (err) {
       console.warn(`[auth] magic consume: ${(err as Error).message}`);
       res.redirect(`${publicOrigin(req)}/login?error=magic_failed`);
+    }
+  });
+
+  /* ---- Password reset (forgot password) ---- */
+  app.post("/api/auth/password-reset/request", async (req: Request, res: Response) => {
+    try {
+      if (!pushHit(resetHitsByIp, reqIp(req), 60 * 60 * 1000, RESET_IP_PER_HOUR)) {
+        return res.json({ ok: true });
+      }
+      const parsed = z.object({ email: z.string().email().max(254) }).safeParse(req.body);
+      if (!parsed.success) return res.json({ ok: true });
+      const email = parsed.data.email.trim().toLowerCase();
+      const last = resetLastByEmail.get(email) ?? 0;
+      if (Date.now() - last < MAGIC_EMAIL_COOLDOWN_MS) return res.json({ ok: true });
+      resetLastByEmail.set(email, Date.now());
+
+      const user = await storage.getUserByEmail(email);
+      if (user && !user.username.startsWith("anon-")) {
+        const token = createAuthToken(
+          { purpose: "password_reset", email, userId: user.id },
+          PASSWORD_RESET_TTL_MS,
+        );
+        const resetUrl = `${publicOrigin(req)}/reset-password?token=${encodeURIComponent(token)}`;
+        try {
+          await sendPasswordResetEmail({ to: email, resetUrl });
+        } catch (err) {
+          console.warn(`[auth] password reset send: ${(err as Error).message}`);
+        }
+      }
+      res.json({ ok: true });
+    } catch (err) {
+      console.warn(`[auth] password reset request: ${(err as Error).message}`);
+      res.json({ ok: true });
+    }
+  });
+
+  app.post("/api/auth/password-reset/confirm", async (req: Request, res: Response) => {
+    const body = z
+      .object({
+        token: z.string().min(16).max(256),
+        newPassword: z.string().min(8).max(128),
+      })
+      .safeParse(req.body);
+    if (!body.success) return res.status(400).json({ error: "invalid_body" });
+    if (isCommonPassword(body.data.newPassword)) {
+      return res.status(400).json({ error: "password_too_common" });
+    }
+    const payload = consumeAuthToken(body.data.token, "password_reset");
+    if (!payload?.userId) return res.status(400).json({ error: "reset_invalid" });
+    const user = await storage.getUser(payload.userId);
+    if (!user || user.email?.toLowerCase() !== payload.email) {
+      return res.status(400).json({ error: "reset_invalid" });
+    }
+    try {
+      const hash = await hashPassword(body.data.newPassword);
+      await storage.updateUserPassword(user.id, hash);
+      if (user.email) {
+        sendEmailSafe("password-changed", () => sendPasswordChangedEmail({ to: user.email! }));
+      }
+      res.json({ ok: true });
+    } catch (err) {
+      console.warn(`[auth] password reset confirm: ${(err as Error).message}`);
+      res.status(500).json({ error: "reset_failed" });
+    }
+  });
+
+  /* ---- Email change (signed-in) ---- */
+  app.post("/api/auth/email-change/request", async (req: Request, res: Response) => {
+    if (!req.session.userId) return res.status(401).json({ error: "auth_required" });
+    const body = z.object({ newEmail: z.string().email().max(254) }).safeParse(req.body);
+    if (!body.success) return res.status(400).json({ error: "invalid_body" });
+    const newEmail = body.data.newEmail.trim().toLowerCase();
+    const user = await storage.getUser(req.session.userId);
+    if (!user || user.username.startsWith("anon-")) {
+      return res.status(400).json({ error: "auth_required" });
+    }
+    if (user.email?.toLowerCase() === newEmail) {
+      return res.status(400).json({ error: "email_unchanged" });
+    }
+    if (await storage.getUserByEmail(newEmail)) {
+      return res.status(409).json({ error: "email_taken" });
+    }
+    const last = emailChangeLastByUser.get(user.id) ?? 0;
+    if (Date.now() - last < EMAIL_CHANGE_COOLDOWN_MS) {
+      return res.status(429).json({ error: "rate_limited" });
+    }
+    emailChangeLastByUser.set(user.id, Date.now());
+
+    const token = createAuthToken(
+      {
+        purpose: "email_change",
+        email: user.email ?? user.username,
+        userId: user.id,
+        newEmail,
+      },
+      EMAIL_CHANGE_TTL_MS,
+    );
+    const verifyUrl = `${publicOrigin(req)}/api/auth/email-change/consume?token=${encodeURIComponent(token)}`;
+    try {
+      await sendEmailChangeVerifyEmail({ to: newEmail, verifyUrl, newEmail });
+      res.json({ ok: true });
+    } catch (err) {
+      console.warn(`[auth] email change send: ${(err as Error).message}`);
+      res.status(500).json({ error: "email_send_failed" });
+    }
+  });
+
+  /* ---- Email change (signed-out: email + password) ---- */
+  app.post("/api/auth/email-change/request-account", async (req: Request, res: Response) => {
+    const body = z
+      .object({
+        email: z.string().email().max(254),
+        password: z.string().min(1).max(128),
+        newEmail: z.string().email().max(254),
+      })
+      .safeParse(req.body);
+    if (!body.success) return res.status(400).json({ error: "invalid_body" });
+    const email = body.data.email.trim().toLowerCase();
+    const newEmail = body.data.newEmail.trim().toLowerCase();
+    if (email === newEmail) return res.status(400).json({ error: "email_unchanged" });
+
+    const user = await storage.getUserByEmail(email);
+    if (!user || !user.password?.startsWith("scrypt$")) {
+      return res.status(401).json({ error: "invalid_credentials" });
+    }
+    const ok = await verifyPassword(body.data.password, user.password);
+    if (!ok) return res.status(401).json({ error: "invalid_credentials" });
+    if (await storage.getUserByEmail(newEmail)) {
+      return res.status(409).json({ error: "email_taken" });
+    }
+    const last = emailChangeLastByUser.get(user.id) ?? 0;
+    if (Date.now() - last < EMAIL_CHANGE_COOLDOWN_MS) {
+      return res.status(429).json({ error: "rate_limited" });
+    }
+    emailChangeLastByUser.set(user.id, Date.now());
+
+    const token = createAuthToken(
+      { purpose: "email_change", email, userId: user.id, newEmail },
+      EMAIL_CHANGE_TTL_MS,
+    );
+    const verifyUrl = `${publicOrigin(req)}/api/auth/email-change/consume?token=${encodeURIComponent(token)}`;
+    try {
+      await sendEmailChangeVerifyEmail({ to: newEmail, verifyUrl, newEmail });
+      res.json({ ok: true });
+    } catch (err) {
+      console.warn(`[auth] email change account send: ${(err as Error).message}`);
+      res.status(500).json({ error: "email_send_failed" });
+    }
+  });
+
+  app.get("/api/auth/email-change/consume", async (req: Request, res: Response) => {
+    const token = String(req.query.token ?? "").trim();
+    if (!token) {
+      return res.redirect(`${publicOrigin(req)}/account?error=email_change_invalid`);
+    }
+    const payload = consumeAuthToken(token, "email_change");
+    if (!payload?.userId || !payload.newEmail) {
+      return res.redirect(`${publicOrigin(req)}/account?error=email_change_invalid`);
+    }
+    try {
+      const user = await storage.getUser(payload.userId);
+      if (!user) {
+        return res.redirect(`${publicOrigin(req)}/account?error=email_change_invalid`);
+      }
+      if (await storage.getUserByEmail(payload.newEmail)) {
+        return res.redirect(`${publicOrigin(req)}/account?error=email_taken`);
+      }
+      const oldEmail = user.email;
+      await storage.updateUserEmail(user.id, payload.newEmail);
+      if (oldEmail && oldEmail.toLowerCase() !== payload.newEmail) {
+        sendEmailSafe("email-changed-old", () =>
+          sendEmailChangedNotice({
+            to: oldEmail,
+            oldEmail,
+            newEmail: payload.newEmail!,
+          }),
+        );
+      }
+      sendEmailSafe("email-changed-new", () =>
+        sendEmailChangedNotice({
+          to: payload.newEmail!,
+          oldEmail: oldEmail ?? "(none)",
+          newEmail: payload.newEmail!,
+        }),
+      );
+      res.redirect(`${publicOrigin(req)}/account?email_updated=1`);
+    } catch (err) {
+      console.warn(`[auth] email change consume: ${(err as Error).message}`);
+      res.redirect(`${publicOrigin(req)}/account?error=email_change_failed`);
     }
   });
 
@@ -682,6 +906,7 @@ export function registerAuthRoutes(app: Express): void {
       }
       const desired = `lichess-${account.username.toLowerCase()}`;
       let user = await storage.getUserByUsername(desired);
+      const isNewUser = !user;
       if (!user) {
         user = await storage.createUser({
           username: desired,
@@ -689,6 +914,16 @@ export function registerAuthRoutes(app: Express): void {
           email: null,
           preferences: {},
         });
+        sendEmailSafe("admin-signup", () =>
+          notifyAdminUserSignup({
+            userId: user!.id,
+            username: user!.username,
+            email: null,
+            method: "lichess",
+            ip: reqIp(req),
+          }),
+        );
+        recordSignupFromIp(reqIp(req), user!.username, user!.id);
       }
       const dest = safeRedirectPath(req.session.authRedirectNext);
       req.session.regenerate((err) => {

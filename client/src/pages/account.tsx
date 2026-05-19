@@ -1,23 +1,50 @@
 import * as React from "react";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
-import { CreditCard, LogOut, BarChart3, Palette } from "lucide-react";
+import { CreditCard, LogOut, BarChart3, Palette, Shield } from "lucide-react";
+import { Input } from "@/components/ui/Input";
 
 /**
  * Signed-in account hub: billing, stats, sign out. Guests are sent to login.
  */
 export default function AccountPage() {
   const [, setLoc] = useLocation();
+  const search = useSearch();
   const qc = useQueryClient();
   const { user, isLoading: userLoading } = useCurrentUser();
   const [logoutBusy, setLogoutBusy] = React.useState(false);
 
+  const [newEmail, setNewEmail] = React.useState("");
+  const [emailBusy, setEmailBusy] = React.useState(false);
+  const [emailMsg, setEmailMsg] = React.useState<string | null>(null);
+  const [emailErr, setEmailErr] = React.useState<string | null>(null);
+
+  const [currentPassword, setCurrentPassword] = React.useState("");
+  const [newPassword, setNewPassword] = React.useState("");
+  const [pwBusy, setPwBusy] = React.useState(false);
+  const [pwMsg, setPwMsg] = React.useState<string | null>(null);
+  const [pwErr, setPwErr] = React.useState<string | null>(null);
+
   useDocumentTitle("Account — Chess Finder Pro");
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(search);
+    if (params.get("email_updated") === "1") {
+      setEmailMsg("Your email address was updated.");
+      void qc.invalidateQueries({ queryKey: ["auth", "me"] });
+    } else if (params.get("error") === "email_change_invalid") {
+      setEmailErr("That email confirmation link is invalid or expired.");
+    } else if (params.get("error") === "email_taken") {
+      setEmailErr("That email is already in use.");
+    } else if (params.get("error") === "email_change_failed") {
+      setEmailErr("Could not update email. Try again.");
+    }
+  }, [search, qc]);
 
   React.useEffect(() => {
     if (!userLoading && user && !user.authenticated) {
@@ -33,6 +60,56 @@ export default function AccountPage() {
       setLoc("/");
     } catch {
       setLogoutBusy(false);
+    }
+  };
+
+  const onRequestEmailChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailErr(null);
+    setEmailMsg(null);
+    setEmailBusy(true);
+    try {
+      await api("/api/auth/email-change/request", {
+        method: "POST",
+        body: JSON.stringify({ newEmail: newEmail.trim() }),
+      });
+      setEmailMsg(`Confirmation link sent to ${newEmail.trim()}. Check that inbox.`);
+      setNewEmail("");
+    } catch (err) {
+      const code = (err as Error).message;
+      if (code === "email_taken") setEmailErr("That email is already in use.");
+      else if (code === "email_unchanged") setEmailErr("Enter a different email.");
+      else if (code === "rate_limited") setEmailErr("Wait a few minutes before trying again.");
+      else setEmailErr("Could not send confirmation email.");
+    } finally {
+      setEmailBusy(false);
+    }
+  };
+
+  const onChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwErr(null);
+    setPwMsg(null);
+    setPwBusy(true);
+    try {
+      await api("/api/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
+      setPwMsg("Password updated. We emailed you a confirmation if you have an address on file.");
+      setCurrentPassword("");
+      setNewPassword("");
+    } catch (err) {
+      const code = (err as Error).message;
+      if (code === "invalid_credentials") setPwErr("Current password is incorrect.");
+      else if (code === "no_password_set") setPwErr("Use Forgot password on sign-in to set one.");
+      else if (code === "password_too_common") setPwErr("Choose a stronger password.");
+      else setPwErr("Could not update password.");
+    } finally {
+      setPwBusy(false);
     }
   };
 
@@ -139,6 +216,70 @@ export default function AccountPage() {
               <Link href="/analysis">Open Analysis</Link>
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Security
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6 text-sm">
+          <form onSubmit={(e) => void onRequestEmailChange(e)} className="space-y-3">
+            <p className="text-muted-foreground">
+              Change the email you use to sign in. We send a confirmation link to the new address.
+            </p>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">New email</label>
+              <Input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder={user.email ?? "you@example.com"}
+                required
+              />
+            </div>
+            {emailMsg && <p className="text-emerald-400/90 text-xs">{emailMsg}</p>}
+            {emailErr && <p className="text-destructive text-xs">{emailErr}</p>}
+            <Button type="submit" variant="outline" size="sm" disabled={emailBusy || !newEmail.trim()}>
+              {emailBusy ? "Sending…" : "Send email confirmation"}
+            </Button>
+          </form>
+
+          <form onSubmit={(e) => void onChangePassword(e)} className="space-y-3 border-t border-border/60 pt-4">
+            <p className="text-muted-foreground">Update your password.</p>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">Current password</label>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">New password (min 8)</label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+                minLength={8}
+              />
+            </div>
+            {pwMsg && <p className="text-emerald-400/90 text-xs">{pwMsg}</p>}
+            {pwErr && <p className="text-destructive text-xs">{pwErr}</p>}
+            <Button
+              type="submit"
+              variant="outline"
+              size="sm"
+              disabled={pwBusy || !currentPassword || newPassword.length < 8}
+            >
+              {pwBusy ? "Saving…" : "Change password"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
 

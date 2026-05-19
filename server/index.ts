@@ -12,6 +12,10 @@ import { registerSitePricingRoutes } from "./services/sitePricing.js";
 import { registerOperatorPortalRoutes } from "./services/operatorPortal.js";
 import { registerSiteAnalyticsRoutes } from "./services/siteAnalytics.js";
 import { registerBillingRoutes, registerBillingWebhook } from "./services/billing.js";
+import { registerResendWebhook } from "./services/resendWebhook.js";
+import { registerContactRoutes } from "./services/contact.js";
+import { startOpsCron } from "./services/opsCron.js";
+import { recordServer5xx } from "./services/opsAlerts.js";
 import { runStartupSelfTests } from "./selfTest.js";
 import { startGeneratorCron } from "./services/generatorCron.js";
 import { resolveCoachLlmForExplain } from "./services/coachLlm.js";
@@ -32,6 +36,7 @@ async function main() {
   // it must be registered BEFORE `express.json()`. The handler itself uses
   // `express.raw({ type: 'application/json' })` to satisfy that.
   registerBillingWebhook(app);
+  registerResendWebhook(app);
 
   app.use(express.json({ limit: "20mb" }));
   app.use(express.urlencoded({ extended: true }));
@@ -48,6 +53,16 @@ async function main() {
   await ensureDevLoginUser();
   await seedTraining(storage);
 
+  app.use((req, res, next) => {
+    if (!req.path.startsWith("/api")) return next();
+    res.on("finish", () => {
+      if (res.statusCode >= 500) {
+        recordServer5xx(req.path);
+      }
+    });
+    next();
+  });
+
   // Session + identity must be installed BEFORE route handlers so every
   // request has access to `req.session.userId`.
   installAuth(app);
@@ -57,6 +72,7 @@ async function main() {
   registerSiteAnalyticsRoutes(app);
   registerBillingRoutes(app);
   registerProFeatureGate(app);
+  registerContactRoutes(app);
   registerRoutes(app);
 
   // Validate seeds + opening prefixes once at boot — non-fatal warnings.
@@ -238,6 +254,7 @@ async function main() {
     // Periodic generator cron: weekly per-user pass over unanalyzed
     // imports. Disable with GENERATOR_CRON=off.
     startGeneratorCron(storage);
+    startOpsCron(storage);
 
     // Heavy bulk basic-mate scan (~60-240s of *synchronous* CPU that
     // blocks the Node event loop). Skipped by default — the curated

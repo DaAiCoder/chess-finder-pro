@@ -6,6 +6,10 @@
  *   GET  /api/billing/subscription      — current user's subscription status
  *   POST /api/billing/webhook           — Stripe → us; **raw body** required
  *
+ * Stripe webhook events used (add in Dashboard → Webhooks):
+ *   checkout.session.completed, customer.subscription.*, invoice.payment_*,
+ *   charge.dispute.*, charge.refunded, refund.created
+ *
  * Configuration (env vars):
  *   STRIPE_SECRET_KEY           sk_live_… or sk_test_…
  *   STRIPE_WEBHOOK_SECRET       whsec_…  (from the Stripe Dashboard webhook page)
@@ -23,6 +27,14 @@ import Stripe from "stripe";
 import { z } from "zod";
 import { storage } from "../storage.js";
 import { requireSignedIn, getUserId } from "../auth.js";
+import {
+  sendEmailSafe,
+  sendPaymentFailedEmail,
+  sendSubscriptionCanceledEmail,
+  sendSubscriptionWelcomeEmail,
+  notifyAdminSubscription,
+} from "./transactionalEmail.js";
+import { notifyAdminDispute, notifyAdminRefund, notifyWebhookSignatureFailure } from "./opsAlerts.js";
 
 type Plan = "monthly" | "yearly";
 
@@ -79,6 +91,65 @@ function statusFromStripe(
   return (status ?? "none").toString();
 }
 
+function formatPeriodEnd(d: Date | null | undefined): string | null {
+  if (!d) return null;
+  try {
+    return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  } catch {
+    return d.toISOString();
+  }
+}
+
+function userEmailForBilling(user: { email?: string | null }): string | null {
+  const e = user.email?.trim();
+  return e && e.includes("@") ? e : null;
+}
+
+async function sendBillingEmails(args: {
+  user: { id: number; username: string; email?: string | null };
+  event: "subscribed" | "canceled" | "cancel_scheduled" | "payment_failed" | "renewed";
+  plan: string | null;
+  status: string;
+  periodEnd?: Date | null;
+  atPeriodEnd?: boolean;
+}): Promise<void> {
+  const periodLabel = formatPeriodEnd(args.periodEnd);
+  const to = userEmailForBilling(args.user);
+  if (to) {
+    if (args.event === "subscribed" && (args.plan === "monthly" || args.plan === "yearly")) {
+      sendEmailSafe("subscription-welcome", () =>
+        sendSubscriptionWelcomeEmail({
+          to,
+          plan: args.plan as "monthly" | "yearly",
+          periodEnd: periodLabel,
+        }),
+      );
+    } else if (args.event === "cancel_scheduled" || args.event === "canceled") {
+      sendEmailSafe("subscription-canceled", () =>
+        sendSubscriptionCanceledEmail({
+          to,
+          plan: args.plan,
+          atPeriodEnd: args.event === "cancel_scheduled",
+          periodEnd: periodLabel,
+        }),
+      );
+    } else if (args.event === "payment_failed") {
+      sendEmailSafe("payment-failed", () => sendPaymentFailedEmail({ to }));
+    }
+  }
+  sendEmailSafe("admin-billing", () =>
+    notifyAdminSubscription({
+      event: args.event,
+      userId: args.user.id,
+      username: args.user.username,
+      email: args.user.email ?? null,
+      plan: args.plan,
+      status: args.status,
+      periodEnd: periodLabel,
+    }),
+  );
+}
+
 /* ---------------------------------------------------------------------- */
 /* Public route registration                                               */
 /* ---------------------------------------------------------------------- */
@@ -104,6 +175,7 @@ export function registerBillingWebhook(app: Express): void {
         event = stripe().webhooks.constructEvent(req.body as Buffer, sig, secret);
       } catch (err) {
         console.warn(`[billing] webhook signature failed: ${(err as Error).message}`);
+        notifyWebhookSignatureFailure("stripe", (err as Error).message);
         return res.status(400).json({ error: "invalid_signature" });
       }
       try {
@@ -257,6 +329,16 @@ async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
         subscriptionCurrentPeriodEnd: periodEnd,
         subscriptionCancelAtPeriodEnd: cancelAtPeriodEnd,
       });
+      const user = await storage.getUser(userId);
+      if (user && plan) {
+        await sendBillingEmails({
+          user,
+          event: "subscribed",
+          plan,
+          status,
+          periodEnd,
+        });
+      }
       return;
     }
 
@@ -270,17 +352,37 @@ async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
         console.warn(`[billing] subscription event for unknown customer ${customerId}`);
         return;
       }
+      const wasCancelScheduled = !!user.subscriptionCancelAtPeriodEnd;
       const isDeleted = event.type === "customer.subscription.deleted";
       const plan = planFromPriceId(sub.items.data[0]?.price.id);
       const cpEnd = (sub as unknown as { current_period_end?: number }).current_period_end;
       const periodEnd = typeof cpEnd === "number" ? new Date(cpEnd * 1000) : null;
+      const cancelAtPeriodEnd = !!sub.cancel_at_period_end;
       await storage.updateUserSubscription(user.id, {
         stripeSubscriptionId: isDeleted ? null : sub.id,
         subscriptionStatus: isDeleted ? "canceled" : statusFromStripe(sub.status),
         subscriptionPlan: isDeleted ? null : plan,
         subscriptionCurrentPeriodEnd: periodEnd,
-        subscriptionCancelAtPeriodEnd: !!sub.cancel_at_period_end,
+        subscriptionCancelAtPeriodEnd: cancelAtPeriodEnd,
       });
+      if (isDeleted) {
+        await sendBillingEmails({
+          user,
+          event: "canceled",
+          plan: user.subscriptionPlan ?? plan,
+          status: "canceled",
+          periodEnd,
+        });
+      } else if (cancelAtPeriodEnd && !wasCancelScheduled) {
+        await sendBillingEmails({
+          user,
+          event: "cancel_scheduled",
+          plan: plan ?? user.subscriptionPlan,
+          status: statusFromStripe(sub.status),
+          periodEnd,
+          atPeriodEnd: true,
+        });
+      }
       return;
     }
 
@@ -292,6 +394,13 @@ async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
       if (!user) return;
       await storage.updateUserSubscription(user.id, {
         subscriptionStatus: "past_due",
+      });
+      await sendBillingEmails({
+        user,
+        event: "payment_failed",
+        plan: user.subscriptionPlan,
+        status: "past_due",
+        periodEnd: user.subscriptionCurrentPeriodEnd,
       });
       return;
     }
@@ -309,11 +418,94 @@ async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
       if (!user) return;
       const sub = await stripe().subscriptions.retrieve(subscriptionId);
       const cpEnd = (sub as unknown as { current_period_end?: number }).current_period_end;
+      const periodEnd = typeof cpEnd === "number" ? new Date(cpEnd * 1000) : null;
+      const plan = planFromPriceId(sub.items.data[0]?.price.id);
+      const isRenewal =
+        inv.billing_reason === "subscription_cycle" ||
+        inv.billing_reason === "subscription_update";
       await storage.updateUserSubscription(user.id, {
         subscriptionStatus: statusFromStripe(sub.status),
-        subscriptionCurrentPeriodEnd: typeof cpEnd === "number" ? new Date(cpEnd * 1000) : null,
+        subscriptionCurrentPeriodEnd: periodEnd,
         subscriptionCancelAtPeriodEnd: !!sub.cancel_at_period_end,
-        subscriptionPlan: planFromPriceId(sub.items.data[0]?.price.id),
+        subscriptionPlan: plan,
+      });
+      if (isRenewal && inv.amount_paid > 0) {
+        await sendBillingEmails({
+          user,
+          event: "renewed",
+          plan: plan ?? user.subscriptionPlan,
+          status: statusFromStripe(sub.status),
+          periodEnd,
+        });
+      }
+      return;
+    }
+
+    case "charge.dispute.created":
+    case "charge.dispute.updated":
+    case "charge.dispute.closed": {
+      const dispute = event.data.object as Stripe.Dispute;
+      const chargeRef = dispute.charge;
+      const chargeId = typeof chargeRef === "string" ? chargeRef : chargeRef?.id ?? null;
+      let user: Awaited<ReturnType<typeof storage.getUserByStripeCustomerId>> | undefined;
+      let customerEmail: string | null = null;
+      if (chargeId) {
+        const charge = await stripe().charges.retrieve(chargeId);
+        customerEmail = charge.billing_details?.email ?? null;
+        const customerId =
+          typeof charge.customer === "string" ? charge.customer : charge.customer?.id ?? null;
+        if (customerId) user = await storage.getUserByStripeCustomerId(customerId);
+      }
+      notifyAdminDispute({
+        event: event.type,
+        disputeId: dispute.id,
+        amount: (dispute.amount / 100).toFixed(2),
+        currency: (dispute.currency ?? "usd").toUpperCase(),
+        customerEmail,
+        userId: user?.id,
+        username: user?.username,
+      });
+      return;
+    }
+
+    case "charge.refunded":
+    case "refund.created": {
+      if (event.type === "refund.created") {
+        const refund = event.data.object as Stripe.Refund;
+        if (refund.status && refund.status !== "succeeded" && refund.status !== "pending") {
+          return;
+        }
+        const chargeId =
+          typeof refund.charge === "string" ? refund.charge : refund.charge?.id ?? null;
+        let user: Awaited<ReturnType<typeof storage.getUserByStripeCustomerId>> | undefined;
+        if (chargeId) {
+          const charge = await stripe().charges.retrieve(chargeId);
+          const customerId =
+            typeof charge.customer === "string" ? charge.customer : charge.customer?.id ?? null;
+          if (customerId) user = await storage.getUserByStripeCustomerId(customerId);
+        }
+        notifyAdminRefund({
+          refundId: refund.id,
+          amount: (refund.amount / 100).toFixed(2),
+          currency: (refund.currency ?? "usd").toUpperCase(),
+          customerEmail: user?.email ?? null,
+          userId: user?.id,
+          username: user?.username,
+        });
+        return;
+      }
+      const charge = event.data.object as Stripe.Charge;
+      const customerId =
+        typeof charge.customer === "string" ? charge.customer : charge.customer?.id ?? null;
+      const user = customerId ? await storage.getUserByStripeCustomerId(customerId) : undefined;
+      const refund = charge.refunds?.data?.[0];
+      notifyAdminRefund({
+        refundId: refund?.id ?? charge.id,
+        amount: ((refund?.amount ?? charge.amount_refunded) / 100).toFixed(2),
+        currency: (charge.currency ?? "usd").toUpperCase(),
+        customerEmail: charge.billing_details?.email ?? user?.email ?? null,
+        userId: user?.id,
+        username: user?.username,
       });
       return;
     }

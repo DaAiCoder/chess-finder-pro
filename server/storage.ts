@@ -83,6 +83,8 @@ export interface IStorage {
       subscriptionCancelAtPeriodEnd?: boolean;
     },
   ): Promise<User | undefined>;
+  /** Non-anonymous member accounts (for ops cron / digest). */
+  listMemberUsers(): Promise<User[]>;
 
   // games
   listGames(userId?: number): Promise<Game[]>;
@@ -649,6 +651,9 @@ class InMemoryStorage implements IStorage {
     this.users.set(userId, next);
     this.schedulePersist();
     return next;
+  }
+  async listMemberUsers() {
+    return [...this.users.values()].filter((u) => !u.username.startsWith("anon-"));
   }
 
   /* games */

@@ -20,7 +20,7 @@ export default function Home() {
       </div>
     );
   }
-  if (user && !user.anonymous) {
+  if (isSignedInUser(user)) {
     return <Redirect to="/analysis" />;
   }
   return <LandingPage />;

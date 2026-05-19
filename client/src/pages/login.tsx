@@ -155,6 +155,29 @@ export default function LoginPage() {
     }
   };
 
+  const sendPasswordReset = async () => {
+    setErr(null);
+    setMagicMsg(null);
+    if (!isValidEmail(email.trim())) {
+      setErr("Enter your account email first, then click Forgot.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await api("/api/auth/password-reset/request", {
+        method: "POST",
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      setMagicMsg(
+        "If an account exists with that email, we sent a password reset link. Check your inbox.",
+      );
+    } catch (e) {
+      setErr(errorLabel((e as Error).message));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const lichessHref = `/api/auth/lichess/start?next=${encodeURIComponent(nextPath)}`;
 
   const pwStrength = React.useMemo(() => scorePassword(password), [password]);
@@ -273,8 +296,9 @@ export default function LoginPage() {
                               type="button"
                               className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
                               onClick={() => {
-                                setUsePasswordless(true);
                                 setErr(null);
+                                setMagicMsg(null);
+                                void sendPasswordReset();
                               }}
                             >
                               Forgot?
@@ -376,6 +400,10 @@ export default function LoginPage() {
           <a href="/privacy" className="underline-offset-2 hover:underline">
             privacy policy
           </a>
+          .{" "}
+          <a href="/email-change" className="underline-offset-2 hover:underline">
+            Change email
+          </a>
           .
         </p>
       </div>
@@ -454,7 +482,7 @@ function isValidEmail(s: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && s.length <= 254;
 }
 
-/** Sign-in accepts email (magic link / passport) or username (e.g. dev). */
+/** Sign-in accepts email or username. */
 function isValidLoginIdentifier(s: string): boolean {
   const t = s.trim();
   if (!t || t.length > 254) return false;

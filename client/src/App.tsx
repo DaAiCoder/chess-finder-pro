@@ -49,8 +49,13 @@ const MyStatistics = React.lazy(() => import("@/pages/my-statistics"));
 const CoachPage = React.lazy(() => import("@/pages/coach"));
 const LoginPage = React.lazy(() => import("@/pages/login"));
 const AdminPricing = React.lazy(() => import("@/pages/admin-pricing"));
+const AdminOverview = React.lazy(() => import("@/pages/admin/overview"));
 const AdminSiteAnalytics = React.lazy(() => import("@/pages/admin/site-analytics"));
 const AdminMembers = React.lazy(() => import("@/pages/admin/members"));
+const AdminProduct = React.lazy(() => import("@/pages/admin/product"));
+const AdminEngagement = React.lazy(() => import("@/pages/admin/engagement"));
+const AdminRevenue = React.lazy(() => import("@/pages/admin/revenue"));
+const AdminOps = React.lazy(() => import("@/pages/admin/ops"));
 const PricingPage = React.lazy(() => import("@/pages/pricing"));
 const ThanksPage = React.lazy(() => import("@/pages/thanks"));
 const AccountBillingPage = React.lazy(() => import("@/pages/account-billing"));
@@ -126,9 +131,15 @@ function AdminApp() {
         <OperatorAuthBoundary mode="fullscreen">
           <AdminLayout>
             <Switch>
-              <Route path="/" component={() => <Redirect to="/admin/site-analytics" />} />
-              <Route path="/admin/site-analytics" component={AdminSiteAnalytics} />
+              <Route path="/" component={() => <Redirect to="/admin" />} />
+              <Route path="/admin" component={AdminOverview} />
+              <Route path="/admin/traffic" component={AdminSiteAnalytics} />
+              <Route path="/admin/site-analytics" component={() => <Redirect to="/admin/traffic" />} />
               <Route path="/admin/members" component={AdminMembers} />
+              <Route path="/admin/product" component={AdminProduct} />
+              <Route path="/admin/engagement" component={AdminEngagement} />
+              <Route path="/admin/revenue" component={AdminRevenue} />
+              <Route path="/admin/ops" component={AdminOps} />
               <Route path="/admin/pricing" component={AdminPricing} />
               <Route component={NotFound} />
             </Switch>

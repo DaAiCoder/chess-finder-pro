@@ -10,6 +10,10 @@ import { adminOrOperatorPortalOk } from "./sitePricing.js";
 import { adminPortalHostSet, operatorSubdomainMatchesPublicOrigin } from "../spaHtmlInject.js";
 import { countSignupsInRange, listRecentSignups } from "./signupAnalytics.js";
 import { storage } from "../storage.js";
+import {
+  snapshotMemberSubscriptionStats,
+  snapshotSignupsInRange,
+} from "./snapshotQuery.js";
 
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX = 120;
@@ -145,82 +149,6 @@ function parseQueryDate(q: unknown, fallback: Date): Date {
   if (typeof q !== "string" || !q.trim()) return fallback;
   const d = new Date(q);
   return Number.isNaN(d.getTime()) ? fallback : d;
-}
-
-type PgSql = NonNullable<ReturnType<typeof getPostgresSql>>;
-
-/** Member accounts live in `app_snapshot.payload.users`, not the empty Drizzle `users` table. */
-function snapshotMembersFrom(handle: PgSql) {
-  return handle`
-    FROM app_snapshot s
-    CROSS JOIN LATERAL jsonb_array_elements(s.payload->'users') AS elem
-    WHERE s.id = 1
-      AND elem->>'username' NOT LIKE 'anon-%'
-  `;
-}
-
-async function snapshotMemberSubscriptionStats(handle: PgSql): Promise<{
-  totalUsers: number;
-  paying: number;
-  byStatus: { status: string; count: number }[];
-  byPlan: { plan: string; count: number }[];
-}> {
-  const membersFrom = snapshotMembersFrom(handle);
-  const [totals, byStatus, byPlan] = await Promise.all([
-    handle`
-      SELECT
-        COUNT(*)::text AS total_users,
-        COUNT(*) FILTER (
-          WHERE COALESCE(elem->>'subscriptionStatus', '') IN ('active', 'trialing')
-        )::text AS paying
-      ${membersFrom}
-    `,
-    handle`
-      SELECT
-        COALESCE(NULLIF(TRIM(elem->>'subscriptionStatus'), ''), 'none') AS status,
-        COUNT(*)::text AS c
-      ${membersFrom}
-      GROUP BY 1
-      ORDER BY COUNT(*) DESC
-    `,
-    handle`
-      SELECT
-        COALESCE(NULLIF(TRIM(elem->>'subscriptionPlan'), ''), 'none') AS plan,
-        COUNT(*)::text AS c
-      ${membersFrom}
-      GROUP BY 1
-      ORDER BY COUNT(*) DESC
-    `,
-  ]);
-
-  const t0 = totals[0] as unknown as { total_users: string; paying: string } | undefined;
-  return {
-    totalUsers: Number(t0?.total_users ?? 0),
-    paying: Number(t0?.paying ?? 0),
-    byStatus: (byStatus as unknown as { status: string; c: string }[]).map((r) => ({
-      status: r.status,
-      count: Number(r.c),
-    })),
-    byPlan: (byPlan as unknown as { plan: string; c: string }[]).map((r) => ({
-      plan: r.plan,
-      count: Number(r.c),
-    })),
-  };
-}
-
-async function snapshotSignupsInRange(
-  handle: PgSql,
-  fromSql: string,
-  toSql: string,
-): Promise<number> {
-  const membersFrom = snapshotMembersFrom(handle);
-  const rows = await handle`
-    SELECT COUNT(*)::text AS n
-    ${membersFrom}
-      AND (elem->>'createdAt')::timestamptz >= ${fromSql}::timestamptz
-      AND (elem->>'createdAt')::timestamptz <= ${toSql}::timestamptz
-  `;
-  return Number((rows[0] as unknown as { n: string })?.n ?? 0);
 }
 
 export function registerSiteAnalyticsRoutes(app: Express): void {

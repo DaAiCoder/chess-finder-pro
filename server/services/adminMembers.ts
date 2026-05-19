@@ -5,34 +5,7 @@ import type { Express, Request, Response } from "express";
 import { getPostgresSql } from "../pgClient.js";
 import { adminOrOperatorPortalOk } from "./sitePricing.js";
 import { getSitePricing } from "./sitePricing.js";
-
-type PgSql = NonNullable<ReturnType<typeof getPostgresSql>>;
-
-/** FROM + expand users array (JOINs must follow this, before WHERE). */
-function snapshotMembersFrom(handle: PgSql) {
-  return handle`
-    FROM app_snapshot s
-    CROSS JOIN LATERAL jsonb_array_elements(s.payload->'users') AS elem
-  `;
-}
-
-function snapshotMembersWhere(handle: PgSql, q?: string) {
-  if (q?.trim()) {
-    const pattern = `%${q.trim()}%`;
-    return handle`
-      WHERE s.id = 1
-        AND elem->>'username' NOT LIKE 'anon-%'
-        AND (
-          elem->>'username' ILIKE ${pattern}
-          OR COALESCE(elem->>'email', '') ILIKE ${pattern}
-        )
-    `;
-  }
-  return handle`
-    WHERE s.id = 1
-      AND elem->>'username' NOT LIKE 'anon-%'
-  `;
-}
+import { snapshotMembersFrom, snapshotMembersWhere } from "./snapshotQuery.js";
 
 export function registerAdminMembersRoutes(app: Express): void {
   app.get("/api/admin/members", async (req: Request, res: Response) => {

@@ -19,7 +19,8 @@ interface SubscriptionState {
 /**
  * Post-checkout page. Stripe redirects here with `?cs={session_id}`. We poll
  * `/api/billing/subscription` until the webhook flips status to active, then
- * fire the `purchase` GA4 event + Google Ads conversion.
+ * fire the `purchase` GA4 event + Google Ads Subscribe conversion
+ * (AW-931139138/i8LQCLjByq8cEMKcgLwD).
  */
 export default function ThanksPage() {
   const search = useSearch();

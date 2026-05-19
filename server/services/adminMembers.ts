@@ -61,7 +61,7 @@ export function registerAdminMembersRoutes(app: Express): void {
           (elem->>'createdAt')::timestamptz AS created_at,
           signup.method AS signup_method,
           last_sess.last_seen_at AS last_seen_at,
-          COALESCE(attempts.n, 0)::int AS training_attempts
+          COALESCE(attempts.n, 0) AS training_attempts
         ${membersFrom}
         LEFT JOIN LATERAL (
           SELECT method
@@ -76,7 +76,7 @@ export function registerAdminMembersRoutes(app: Express): void {
           WHERE user_id = (elem->>'id')::int
         ) last_sess ON true
         LEFT JOIN LATERAL (
-          SELECT COUNT(*)::text AS n
+          SELECT COUNT(*)::int AS n
           FROM training_attempts
           WHERE user_id = (elem->>'id')::int
         ) attempts ON true

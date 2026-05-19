@@ -12,8 +12,9 @@
  *
  * Env vars (Vite injects at build time):
  *   VITE_GA4_MEASUREMENT_ID            G-XXXXXXXXXX
- *   VITE_GOOGLE_ADS_ID                 AW-XXXXXXXXXX
- *   VITE_GOOGLE_ADS_CONVERSION_LABEL   <conversion label>
+ *   VITE_GOOGLE_ADS_ID                      AW-XXXXXXXXXX
+ *   VITE_GOOGLE_ADS_CONVERSION_LABEL        Subscribe action label
+ *   VITE_GOOGLE_ADS_SIGNUP_CONVERSION_LABEL Sign-up action label
  */
 
 declare global {
@@ -23,9 +24,12 @@ declare global {
   }
 }
 
+const STORAGE_KEY = "cfp_consent";
 const DEFAULT_GOOGLE_ADS_ID = "AW-931139138";
 /** Google Ads → Subscribe conversion action label */
 const DEFAULT_SUBSCRIBE_CONVERSION_LABEL = "i8LQCLjByq8cEMKcgLwD";
+/** Google Ads → Sign-up conversion action label */
+const DEFAULT_SIGNUP_CONVERSION_LABEL = "_023CLvByq8cEMKcgLwD";
 
 export type ConsentChoice = "granted" | "denied";
 
@@ -45,11 +49,26 @@ function adsId(): string | undefined {
     (import.meta.env.VITE_GOOGLE_ADS_ID as string | undefined) || DEFAULT_GOOGLE_ADS_ID
   );
 }
-function conversionLabel(): string | undefined {
+function subscribeConversionLabel(): string {
   return (
     (import.meta.env.VITE_GOOGLE_ADS_CONVERSION_LABEL as string | undefined) ||
     DEFAULT_SUBSCRIBE_CONVERSION_LABEL
   );
+}
+function signupConversionLabel(): string {
+  return (
+    (import.meta.env.VITE_GOOGLE_ADS_SIGNUP_CONVERSION_LABEL as string | undefined) ||
+    DEFAULT_SIGNUP_CONVERSION_LABEL
+  );
+}
+
+function fireAdsConversion(label: string, params: Record<string, unknown> = {}): void {
+  const ads = adsId();
+  if (!ads || !label) return;
+  safeGtag("event", "conversion", {
+    send_to: `${ads}/${label}`,
+    ...params,
+  });
 }
 
 function safeGtag(...args: unknown[]): void {
@@ -170,6 +189,8 @@ export function trackEvent(name: string, params: Record<string, unknown> = {}): 
 
 export function trackSignUp(method: "email" | "lichess" | "magic_link" = "email"): void {
   trackEvent("sign_up", { method });
+  // Google Ads Sign-up conversion (AW-931139138/_023CLvByq8cEMKcgLwD).
+  fireAdsConversion(signupConversionLabel());
 }
 
 export function trackBeginCheckout(payload: {
@@ -240,14 +261,9 @@ export function trackPurchase(payload: {
   });
 
   // Google Ads Subscribe conversion (AW-931139138/i8LQCLjByq8cEMKcgLwD).
-  const ads = adsId();
-  const label = conversionLabel();
-  if (ads && label) {
-    safeGtag("event", "conversion", {
-      send_to: `${ads}/${label}`,
-      transaction_id: payload.transactionId,
-      value: payload.value,
-      currency,
-    });
-  }
+  fireAdsConversion(subscribeConversionLabel(), {
+    transaction_id: payload.transactionId,
+    value: payload.value,
+    currency,
+  });
 }

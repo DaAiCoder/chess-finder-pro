@@ -10,7 +10,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { RequireTrainingPro } from "@/components/training/RequireTrainingPro";
 import { ConsentBanner } from "@/components/ConsentBanner";
 import { SupportChatWidget } from "@/components/support/SupportChatWidget";
-import { bootstrapConsent, trackPageView } from "@/lib/analytics";
+import { bootstrapConsent, trackPageView, consumeSignedUpFromUrl } from "@/lib/analytics";
 import { trackInternalPageView } from "@/lib/internalAnalytics";
 import ChessTrainer from "@/pages/chess-trainer";
 import Onboarding from "@/pages/onboarding";
@@ -107,6 +107,7 @@ function AnalyticsSync() {
   const [loc] = useLocation();
   React.useEffect(() => {
     bootstrapConsent();
+    consumeSignedUpFromUrl();
   }, []);
   React.useEffect(() => {
     trackPageView(loc);

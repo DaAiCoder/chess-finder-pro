@@ -187,10 +187,53 @@ export function trackEvent(name: string, params: Record<string, unknown> = {}): 
   safeGtag("event", name, { send_to: id, ...params });
 }
 
+const SIGNUP_TRACKED_KEY = "cfp-ads-signup-tracked";
+
 export function trackSignUp(method: "email" | "lichess" | "magic_link" = "email"): void {
+  try {
+    sessionStorage.setItem(SIGNUP_TRACKED_KEY, method);
+  } catch {
+    /* private mode */
+  }
   trackEvent("sign_up", { method });
   // Google Ads Sign-up conversion (AW-931139138/_023CLvByq8cEMKcgLwD).
   fireAdsConversion(signupConversionLabel());
+}
+
+/**
+ * After magic-link or Lichess OAuth creates a new account, the server
+ * redirects with `?signed_up=magic_link|lichess`. Consume once and strip
+ * the param so refreshes don't double-fire.
+ */
+export function consumeSignedUpFromUrl(): void {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get("signed_up");
+  if (raw !== "email" && raw !== "magic_link" && raw !== "lichess") return;
+
+  try {
+    if (sessionStorage.getItem(SIGNUP_TRACKED_KEY)) {
+      params.delete("signed_up");
+      const qs = params.toString();
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash,
+      );
+      return;
+    }
+    sessionStorage.setItem(SIGNUP_TRACKED_KEY, raw);
+  } catch {
+    /* private mode — still track once this load */
+  }
+
+  trackSignUp(raw);
+
+  params.delete("signed_up");
+  const qs = params.toString();
+  const nextUrl =
+    window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash;
+  window.history.replaceState(null, "", nextUrl);
 }
 
 export function trackBeginCheckout(payload: {

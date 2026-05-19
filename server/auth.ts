@@ -295,6 +295,12 @@ function safeRedirectPath(next: string | undefined): string {
   return t;
 }
 
+/** Append a query param for client-side analytics (OAuth / magic-link sign-ups). */
+function appendQueryParam(path: string, key: string, value: string): string {
+  const sep = path.includes("?") ? "&" : "?";
+  return `${path}${sep}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+}
+
 async function uniqueUsernameFromEmail(email: string): Promise<string> {
   const local = email.split("@")[0] ?? "player";
   const base = local
@@ -639,7 +645,9 @@ export function registerAuthRoutes(app: Express): void {
           if (e) {
             return res.redirect(`${publicOrigin(req)}/login?error=session`);
           }
-          res.redirect(`${publicOrigin(req)}${next}`);
+          res.redirect(
+            `${publicOrigin(req)}${isNewUser ? appendQueryParam(next, "signed_up", "magic_link") : next}`,
+          );
         });
       });
     } catch (err) {
@@ -925,7 +933,8 @@ export function registerAuthRoutes(app: Express): void {
         );
         recordSignupFromIp(reqIp(req), user!.username, user!.id);
       }
-      const dest = safeRedirectPath(req.session.authRedirectNext);
+      const destBase = safeRedirectPath(req.session.authRedirectNext);
+      const dest = isNewUser ? appendQueryParam(destBase, "signed_up", "lichess") : destBase;
       req.session.regenerate((err) => {
         if (err) return res.redirect(`${publicOrigin(req)}/login?error=session`);
         req.session.userId = user!.id;

@@ -39,7 +39,9 @@ function ga4Id(): string | undefined {
   return (import.meta.env.VITE_GA4_MEASUREMENT_ID as string | undefined) || undefined;
 }
 function adsId(): string | undefined {
-  return (import.meta.env.VITE_GOOGLE_ADS_ID as string | undefined) || undefined;
+  return (
+    (import.meta.env.VITE_GOOGLE_ADS_ID as string | undefined) || "AW-931139138"
+  );
 }
 function conversionLabel(): string | undefined {
   return (

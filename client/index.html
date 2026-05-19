@@ -50,15 +50,16 @@
     <!--
       Google Tag (gtag.js) with Consent Mode v2 (not the raw GA install snippet —
       avoids a second tag and keeps SPA + banner behavior).
-      Production stream: G-VHETCRLX0G (ChessGM) via VITE_GA4_MEASUREMENT_ID in root `.env`.
+      Production: GA4 G-VHETCRLX0G, Google Ads AW-931139138 (override via VITE_* in .env).
       Defaults stay "denied" until the cookie banner grants storage
       (ConsentBanner.tsx + client/src/lib/analytics.ts).
-      The gtag.js loader runs only when VITE_GA4_MEASUREMENT_ID (or Ads ID) is set at build/dev.
+      The gtag.js loader runs when VITE_GA4_MEASUREMENT_ID and/or Ads ID is set.
     -->
     <script defer src="/gtag-consent-bootstrap.js"></script>
     <script type="module">
       const ga4 = (import.meta.env && import.meta.env.VITE_GA4_MEASUREMENT_ID) || "";
-      const ads = (import.meta.env && import.meta.env.VITE_GOOGLE_ADS_ID) || "";
+      const ads =
+        (import.meta.env && import.meta.env.VITE_GOOGLE_ADS_ID) || "AW-931139138";
       const loaderId = ga4 || ads;
       if (loaderId) {
         const s = document.createElement("script");

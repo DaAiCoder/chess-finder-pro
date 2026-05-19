@@ -23,7 +23,9 @@ declare global {
   }
 }
 
-const STORAGE_KEY = "cfp_consent";
+const DEFAULT_GOOGLE_ADS_ID = "AW-931139138";
+/** Google Ads → Subscribe conversion action label */
+const DEFAULT_SUBSCRIBE_CONVERSION_LABEL = "i8LQCLjByq8cEMKcgLwD";
 
 export type ConsentChoice = "granted" | "denied";
 
@@ -40,12 +42,13 @@ function ga4Id(): string | undefined {
 }
 function adsId(): string | undefined {
   return (
-    (import.meta.env.VITE_GOOGLE_ADS_ID as string | undefined) || "AW-931139138"
+    (import.meta.env.VITE_GOOGLE_ADS_ID as string | undefined) || DEFAULT_GOOGLE_ADS_ID
   );
 }
 function conversionLabel(): string | undefined {
   return (
-    (import.meta.env.VITE_GOOGLE_ADS_CONVERSION_LABEL as string | undefined) || undefined
+    (import.meta.env.VITE_GOOGLE_ADS_CONVERSION_LABEL as string | undefined) ||
+    DEFAULT_SUBSCRIBE_CONVERSION_LABEL
   );
 }
 
@@ -236,7 +239,7 @@ export function trackPurchase(payload: {
     ],
   });
 
-  // Google Ads conversion (separate `send_to` to fire only the Ads tag).
+  // Google Ads Subscribe conversion (AW-931139138/i8LQCLjByq8cEMKcgLwD).
   const ads = adsId();
   const label = conversionLabel();
   if (ads && label) {

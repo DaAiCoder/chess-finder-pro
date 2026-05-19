@@ -42,13 +42,24 @@ const stmts = [
   `CREATE INDEX IF NOT EXISTS analytics_pv_session_idx ON analytics_page_views (session_id)`,
   `CREATE INDEX IF NOT EXISTS analytics_pv_occurred_idx ON analytics_page_views (occurred_at)`,
   `CREATE INDEX IF NOT EXISTS analytics_pv_path_idx ON analytics_page_views (path)`,
+  `CREATE TABLE IF NOT EXISTS analytics_signups (
+    id serial PRIMARY KEY,
+    user_id integer NOT NULL,
+    username varchar(64) NOT NULL,
+    email varchar(255),
+    method varchar(16) NOT NULL,
+    ip varchar(64),
+    occurred_at timestamptz NOT NULL DEFAULT NOW()
+  )`,
+  `CREATE INDEX IF NOT EXISTS analytics_signups_occurred_idx ON analytics_signups (occurred_at)`,
+  `CREATE INDEX IF NOT EXISTS analytics_signups_user_idx ON analytics_signups (user_id)`,
 ];
 
 try {
   for (const q of stmts) {
     await sql.unsafe(q);
   }
-  console.log("[analytics-ddl] analytics_sessions + analytics_page_views OK");
+  console.log("[analytics-ddl] analytics_sessions + analytics_page_views + analytics_signups OK");
 } catch (e) {
   console.error("[analytics-ddl] failed:", e instanceof Error ? e.message : String(e));
   process.exit(1);

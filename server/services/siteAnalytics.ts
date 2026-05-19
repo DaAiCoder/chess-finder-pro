@@ -8,6 +8,8 @@ import geoip from "geoip-lite";
 import { getPostgresSql } from "../pgClient.js";
 import { adminOrOperatorPortalOk } from "./sitePricing.js";
 import { adminPortalHostSet, operatorSubdomainMatchesPublicOrigin } from "../spaHtmlInject.js";
+import { countSignupsInRange, listRecentSignups } from "./signupAnalytics.js";
+import { storage } from "../storage.js";
 
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX = 120;
@@ -339,6 +341,12 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
           `,
         ]);
 
+      const signupEvents = await countSignupsInRange(from, to);
+      const snapshotSignups = await storage.countMemberSignupsInRange(from, to);
+      const postgresSignups = Number((newUsers[0] as unknown as { n: string })?.n ?? 0);
+      const newUsersInRange =
+        signupEvents > 0 ? signupEvents : snapshotSignups > 0 ? snapshotSignups : postgresSignups;
+
       const ua = uniqAnon[0] as unknown as { n: string } | undefined;
       const us = uniqSigned[0] as unknown as { n: string } | undefined;
       const ba = bounceAgg[0] as unknown as { sessions: string; bounces: string } | undefined;
@@ -371,7 +379,7 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
         subscriptions: {
           totalUsers: Number(sg?.total_users ?? 0),
           activeOrTrialing: Number(sg?.paying ?? 0),
-          newUsersInRange: Number((newUsers[0] as unknown as { n: string })?.n ?? 0),
+          newUsersInRange,
           byStatus: (subsStatus as unknown as { status: string; c: string }[]).map((r) => ({
             status: r.status,
             count: Number(r.c),
@@ -501,6 +509,97 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
           country: r.country,
           referrer: r.referrer,
           pageViews: Number(r.page_views),
+        })),
+      });
+    } catch (err) {
+      return res.status(500).json({ error: (err as Error).message });
+    }
+  });
+
+  app.get("/api/admin/analytics/health", async (req: Request, res: Response) => {
+    if (!adminOrOperatorPortalOk(req)) {
+      return res.status(401).json({ error: "admin_unauthorized" });
+    }
+    const sql = getPostgresSql();
+    return res.json({
+      database: !!sql,
+      env: {
+        adminNotifyEmails: Boolean(process.env.ADMIN_NOTIFY_EMAILS?.trim()),
+        adminApiKey: Boolean(process.env.ADMIN_API_KEY?.trim()),
+        operatorLogin: Boolean(
+          process.env.OPERATOR_DASHBOARD_USER?.trim() &&
+            process.env.OPERATOR_DASHBOARD_PASSWORD?.trim(),
+        ),
+        resend: Boolean(process.env.RESEND_API_KEY?.trim()),
+        appPublicOrigin: Boolean(process.env.APP_PUBLIC_ORIGIN?.trim()),
+        siteApex: Boolean(process.env.VITE_SITE_APEX?.trim()),
+      },
+      notes: [
+        "VITE_GA4_MEASUREMENT_ID and VITE_GOOGLE_ADS_ID are build-time — set on Render before deploy.",
+        "First-party page views require visitor analytics cookie consent.",
+        "Sign-ups are recorded server-side in analytics_signups (no consent required).",
+      ],
+    });
+  });
+
+  app.get("/api/admin/analytics/recent-signups", async (req: Request, res: Response) => {
+    if (!adminOrOperatorPortalOk(req)) {
+      return res.status(401).json({ error: "admin_unauthorized" });
+    }
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 25));
+    const to = parseQueryDate(req.query.to, new Date());
+    const from = parseQueryDate(req.query.from, new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000));
+    const items = await listRecentSignups({ limit, from, to });
+    return res.json({ items });
+  });
+
+  app.get("/api/admin/analytics/top-trainers", async (req: Request, res: Response) => {
+    if (!adminOrOperatorPortalOk(req)) {
+      return res.status(401).json({ error: "admin_unauthorized" });
+    }
+    const to = parseQueryDate(req.query.to, new Date());
+    const from = parseQueryDate(req.query.from, new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000));
+    try {
+      const items = await storage.aggregateAttemptsByModule(from, to);
+      return res.json({ items });
+    } catch (err) {
+      return res.status(500).json({ error: (err as Error).message });
+    }
+  });
+
+  app.get("/api/admin/analytics/top-trainer-pages", async (req: Request, res: Response) => {
+    if (!adminOrOperatorPortalOk(req)) {
+      return res.status(401).json({ error: "admin_unauthorized" });
+    }
+    const sql = getPostgresSql();
+    if (!sql) return res.status(503).json({ error: "database_unavailable" });
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
+    const to = parseQueryDate(req.query.to, new Date());
+    const from = parseQueryDate(req.query.from, new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000));
+    const fromSql = from.toISOString();
+    const toSql = to.toISOString();
+
+    try {
+      const rows = await sql`
+        SELECT path, COUNT(*)::text AS c
+        FROM analytics_page_views
+        WHERE occurred_at >= ${fromSql}::timestamptz AND occurred_at <= ${toSql}::timestamptz
+          AND (
+            path LIKE '/training%'
+            OR path LIKE '/openings%'
+            OR path LIKE '/endgames%'
+            OR path LIKE '/champions%'
+            OR path LIKE '/coach%'
+            OR path LIKE '/analysis%'
+          )
+        GROUP BY path
+        ORDER BY COUNT(*) DESC
+        LIMIT ${limit}
+      `;
+      return res.json({
+        items: (rows as unknown as { path: string; c: string }[]).map((r) => ({
+          path: r.path,
+          views: Number(r.c),
         })),
       });
     } catch (err) {

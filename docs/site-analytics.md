@@ -45,6 +45,22 @@ Behind Render (or any proxy), **`trust proxy`** is enabled so `req.ip` and `geoi
 
 Apply with your usual Drizzle flow (e.g. `npm run db:push` / Render build hook) so the analytics tables exist before relying on metrics.
 
+Tables:
+
+- `analytics_sessions` / `analytics_page_views` — consent-gated SPA page views
+- `analytics_signups` — server-recorded sign-ups (email, magic link, Lichess); no cookie consent required
+
+Admin APIs (operator session or `ADMIN_API_KEY`):
+
+- `GET /api/admin/analytics/summary` — traffic KPIs + sign-up count
+- `GET /api/admin/analytics/recent-signups` — sign-up log with method
+- `GET /api/admin/analytics/top-pages` — all paths
+- `GET /api/admin/analytics/top-trainer-pages` — /training, /coach, etc.
+- `GET /api/admin/analytics/top-trainers` — puzzle attempts by module
+- `GET /api/admin/analytics/health` — env + database checklist
+
+GA4 custom events (after cookie consent): `sign_up`, `trainer_view`, `trainer_attempt`, `purchase`, `begin_checkout`.
+
 ## Retention
 
 Row growth is unbounded until you add a cron job or manual SQL (e.g. delete page views older than *N* days). Set `ADMIN_ANALYTICS_RETENTION_DAYS` in `.env` as a reminder for ops; implementation of the job is left to your scheduler.

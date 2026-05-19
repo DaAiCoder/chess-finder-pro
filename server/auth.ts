@@ -58,6 +58,7 @@ import {
   recordSignupFromIp,
   notifyAdminComplimentaryGranted,
 } from "./services/opsAlerts.js";
+import { recordSignupEvent } from "./services/signupAnalytics.js";
 
 /* ---------------------------------------------------------------------- */
 /* Module augmentation: extend express-session SessionData                 */
@@ -301,6 +302,22 @@ function appendQueryParam(path: string, key: string, value: string): string {
   return `${path}${sep}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
 }
 
+function trackNewSignup(args: {
+  userId: number;
+  username: string;
+  email: string | null;
+  method: "email" | "magic_link" | "lichess";
+  ip?: string;
+}): void {
+  void recordSignupEvent({
+    userId: args.userId,
+    username: args.username,
+    email: args.email,
+    method: args.method,
+    ip: args.ip ?? null,
+  });
+}
+
 async function uniqueUsernameFromEmail(email: string): Promise<string> {
   const local = email.split("@")[0] ?? "player";
   const base = local
@@ -440,6 +457,13 @@ export function registerAuthRoutes(app: Express): void {
             }),
           );
           recordSignupFromIp(ip, user.username, user.id);
+          trackNewSignup({
+            userId: user.id,
+            username: user.username,
+            email: emailNorm ?? null,
+            method: "email",
+            ip,
+          });
           res.json({ ok: true, id: user.id, username: user.username });
         });
       });
@@ -634,6 +658,13 @@ export function registerAuthRoutes(app: Express): void {
           }),
         );
         recordSignupFromIp(ip, user!.username, user!.id);
+        trackNewSignup({
+          userId: user!.id,
+          username: user!.username,
+          email,
+          method: "magic_link",
+          ip,
+        });
       }
       req.session.regenerate((err) => {
         if (err) {
@@ -932,6 +963,13 @@ export function registerAuthRoutes(app: Express): void {
           }),
         );
         recordSignupFromIp(reqIp(req), user!.username, user!.id);
+        trackNewSignup({
+          userId: user!.id,
+          username: user!.username,
+          email: null,
+          method: "lichess",
+          ip: reqIp(req),
+        });
       }
       const destBase = safeRedirectPath(req.session.authRedirectNext);
       const dest = isNewUser ? appendQueryParam(destBase, "signed_up", "lichess") : destBase;

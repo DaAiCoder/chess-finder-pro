@@ -187,8 +187,6 @@ export function trackEvent(name: string, params: Record<string, unknown> = {}): 
   safeGtag("event", name, { send_to: id, ...params });
 }
 
-const SIGNUP_TRACKED_KEY = "cfp-ads-signup-tracked";
-
 export function trackSignUp(method: "email" | "lichess" | "magic_link" = "email"): void {
   try {
     sessionStorage.setItem(SIGNUP_TRACKED_KEY, method);
@@ -252,6 +250,24 @@ export function trackBeginCheckout(payload: {
         quantity: 1,
       },
     ],
+  });
+}
+
+/** GA4: trainer page opened (module slug from route or problem). */
+export function trackTrainerView(module: string): void {
+  trackEvent("trainer_view", { module });
+}
+
+/** GA4: puzzle attempt recorded (after /api/training/attempt succeeds). */
+export function trackTrainerAttempt(payload: {
+  module: string;
+  solved: boolean;
+  timeSpent?: number;
+}): void {
+  trackEvent("trainer_attempt", {
+    module: payload.module,
+    solved: payload.solved,
+    time_spent: payload.timeSpent,
   });
 }
 

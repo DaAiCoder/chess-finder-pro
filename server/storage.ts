@@ -126,6 +126,13 @@ export interface IStorage {
   recordAttempt(input: InsertTrainingAttempt): Promise<TrainingAttempt>;
   listAttempts(userId: number, problemId?: number): Promise<TrainingAttempt[]>;
   countAttemptsSince(userId: number, since: Date): Promise<number>;
+  aggregateAttemptsByModule(
+    from: Date,
+    to: Date,
+  ): Promise<
+    { module: string; attempts: number; solved: number; uniqueUsers: number }[]
+  >;
+  countMemberSignupsInRange(from: Date, to: Date): Promise<number>;
 
   getProgress(userId: number, module: string): Promise<TrainingProgress | undefined>;
   upsertProgress(input: InsertTrainingProgress): Promise<TrainingProgress>;
@@ -864,6 +871,40 @@ class InMemoryStorage implements IStorage {
       if (a.userId !== userId) return false;
       const t = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
       return t >= since;
+    }).length;
+  }
+
+  async aggregateAttemptsByModule(from: Date, to: Date) {
+    const map = new Map<string, { attempts: number; solved: number; users: Set<number> }>();
+    for (const a of this.attempts) {
+      const t = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+      if (t < from || t > to) continue;
+      const prob = this.problems.get(a.problemId);
+      const module = prob?.module ?? "unknown";
+      let row = map.get(module);
+      if (!row) {
+        row = { attempts: 0, solved: 0, users: new Set() };
+        map.set(module, row);
+      }
+      row.attempts += 1;
+      if (a.solved) row.solved += 1;
+      row.users.add(a.userId);
+    }
+    return [...map.entries()]
+      .map(([module, r]) => ({
+        module,
+        attempts: r.attempts,
+        solved: r.solved,
+        uniqueUsers: r.users.size,
+      }))
+      .sort((a, b) => b.attempts - a.attempts);
+  }
+
+  async countMemberSignupsInRange(from: Date, to: Date) {
+    return [...this.users.values()].filter((u) => {
+      if (u.username.startsWith("anon-")) return false;
+      const t = u.createdAt instanceof Date ? u.createdAt : new Date(u.createdAt);
+      return t >= from && t <= to;
     }).length;
   }
 

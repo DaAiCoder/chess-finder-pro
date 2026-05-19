@@ -25,6 +25,9 @@ import {
   UserCheck,
   Users,
   Wallet,
+  Dumbbell,
+  UserPlus,
+  Activity,
 } from "lucide-react";
 
 interface SummaryResponse {
@@ -69,6 +72,28 @@ interface RecentSession {
   country: string | null;
   referrer: string | null;
   pageViews: number;
+}
+
+interface RecentSignup {
+  userId: number;
+  username: string;
+  email: string | null;
+  method: string;
+  ip: string | null;
+  occurredAt: string;
+}
+
+interface TrainerUsageRow {
+  module: string;
+  attempts: number;
+  solved: number;
+  uniqueUsers: number;
+}
+
+interface AnalyticsHealth {
+  database: boolean;
+  env: Record<string, boolean>;
+  notes: string[];
 }
 
 function isoDate(d: Date): string {
@@ -128,6 +153,10 @@ export default function AdminSiteAnalyticsPage() {
   const [topPages, setTopPages] = React.useState<TopRow[]>([]);
   const [topCountries, setTopCountries] = React.useState<CountryRow[]>([]);
   const [recent, setRecent] = React.useState<RecentSession[]>([]);
+  const [recentSignups, setRecentSignups] = React.useState<RecentSignup[]>([]);
+  const [topTrainers, setTopTrainers] = React.useState<TrainerUsageRow[]>([]);
+  const [trainerPages, setTrainerPages] = React.useState<TopRow[]>([]);
+  const [health, setHealth] = React.useState<AnalyticsHealth | null>(null);
   const [err, setErr] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
 
@@ -160,16 +189,25 @@ export default function AdminSiteAnalyticsPage() {
     setLoading(true);
     try {
       const key = adminKey.trim() || undefined;
-      const [sum, pages, countries, rec] = await Promise.all([
+      const [sum, pages, countries, rec, signups, trainers, tPages, healthRes] =
+        await Promise.all([
         adminJson<SummaryResponse>(`/api/admin/analytics/summary?${qs}`, key),
         adminJson<{ items: TopRow[] }>(`/api/admin/analytics/top-pages?${qs}`, key),
         adminJson<{ items: CountryRow[] }>(`/api/admin/analytics/top-countries?${qs}`, key),
         adminJson<{ items: RecentSession[] }>(`/api/admin/analytics/recent-sessions?limit=40`, key),
+        adminJson<{ items: RecentSignup[] }>(`/api/admin/analytics/recent-signups?${qs}&limit=25`, key),
+        adminJson<{ items: TrainerUsageRow[] }>(`/api/admin/analytics/top-trainers?${qs}`, key),
+        adminJson<{ items: TopRow[] }>(`/api/admin/analytics/top-trainer-pages?${qs}`, key),
+        adminJson<AnalyticsHealth>(`/api/admin/analytics/health`, key),
       ]);
       setSummary(sum);
       setTopPages(pages.items);
       setTopCountries(countries.items);
       setRecent(rec.items);
+      setRecentSignups(signups.items);
+      setTopTrainers(trainers.items);
+      setTrainerPages(tPages.items);
+      setHealth(healthRes);
     } catch (e) {
       setSummary(null);
       setErr((e as Error).message);
@@ -302,7 +340,7 @@ export default function AdminSiteAnalyticsPage() {
             <KpiCard
               label="New sign-ups"
               value={summary.subscriptions.newUsersInRange.toLocaleString()}
-              hint="Users.created_at in this range"
+              hint="analytics_signups (fallback: snapshot users.created_at)"
               icon={Sparkles}
             />
           </div>
@@ -417,35 +455,156 @@ export default function AdminSiteAnalyticsPage() {
             </Card>
           )}
 
+          {health && (
+            <Card className="border-border/80">
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Analytics setup
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Postgres {health.database ? "connected" : "unavailable"} — sign-ups log server-side; page views
+                  need cookie consent. GA4: Reports → Events (<code className="text-[10px]">sign_up</code>,{" "}
+                  <code className="text-[10px]">trainer_view</code>,{" "}
+                  <code className="text-[10px]">trainer_attempt</code>).
+                </p>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2 text-xs">
+                {Object.entries(health.env).map(([key, ok]) => (
+                  <Badge key={key} variant={ok ? "secondary" : "outline"} className={ok ? "" : "opacity-60"}>
+                    {key}: {ok ? "ok" : "missing"}
+                  </Badge>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Recent sign-ups
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">Server-recorded (email, magic link, Lichess).</p>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                {recentSignups.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No sign-ups in this range yet.</p>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-left text-muted-foreground">
+                        <th className="py-2 pr-3 font-medium">When</th>
+                        <th className="py-2 pr-3 font-medium">User</th>
+                        <th className="py-2 pr-3 font-medium">Method</th>
+                        <th className="py-2 font-medium">Email</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentSignups.map((row) => (
+                        <tr key={`${row.userId}-${row.occurredAt}`} className="border-b border-border/60">
+                          <td className="py-2 pr-3 text-xs whitespace-nowrap">
+                            {new Date(row.occurredAt).toLocaleString()}
+                          </td>
+                          <td className="py-2 pr-3 font-mono text-xs">@{row.username}</td>
+                          <td className="py-2 pr-3 text-xs">{row.method}</td>
+                          <td className="py-2 text-xs truncate max-w-[140px]">{row.email ?? "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Dumbbell className="h-4 w-4" />
+                  Top trainers (puzzle attempts)
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">By training module from recorded attempts.</p>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                {topTrainers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No training attempts in this range.</p>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-left text-muted-foreground">
+                        <th className="py-2 pr-3 font-medium">Module</th>
+                        <th className="py-2 pr-3 font-medium tabular-nums">Attempts</th>
+                        <th className="py-2 pr-3 font-medium tabular-nums">Solved</th>
+                        <th className="py-2 font-medium tabular-nums">Users</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {topTrainers.map((row) => (
+                        <tr key={row.module} className="border-b border-border/60">
+                          <td className="py-2 pr-3 font-mono text-xs">{row.module}</td>
+                          <td className="py-2 pr-3 tabular-nums">{row.attempts}</td>
+                          <td className="py-2 pr-3 tabular-nums">{row.solved}</td>
+                          <td className="py-2 tabular-nums">{row.uniqueUsers}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {trainerPages.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Top trainer &amp; product pages</CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Page views on /training, /openings, /endgames, /coach, /analysis (consent-gated).
+                </p>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-muted-foreground">
+                      <th className="py-2 pr-4 font-medium">Path</th>
+                      <th className="py-2 font-medium tabular-nums">Views</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {trainerPages.map((row) => (
+                      <tr key={row.path} className="border-b border-border/60">
+                        <td className="py-2 pr-4 font-mono text-xs break-all">{row.path}</td>
+                        <td className="py-2 tabular-nums">{row.views}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="border-dashed border-border bg-muted/20">
             <CardHeader>
               <CardTitle className="text-base">Roadmap — GA-style metrics</CardTitle>
               <p className="text-xs text-muted-foreground">
-                Ideas to collect next (needs schema / client / or GA4 link).
+                Still to add: UTM campaigns, session duration, device breakdown, retention cohorts.
               </p>
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground space-y-2 leading-relaxed">
               <ul className="list-disc pl-4 space-y-1">
                 <li>
                   <strong>Acquisition:</strong> channel grouping (organic / paid / direct), campaign &amp; UTM
-                  params, first vs returning visitors.
+                  params.
                 </li>
                 <li>
-                  <strong>Engagement:</strong> avg session duration, scroll depth, events (CTA clicks, checkout
-                  started).
+                  <strong>Engagement:</strong> avg session duration, scroll depth.
                 </li>
                 <li>
-                  <strong>Tech:</strong> device category, browser, OS, screen size (from User-Agent + client hints).
+                  <strong>Retention:</strong> cohort tables (signup week × activity week).
                 </li>
                 <li>
-                  <strong>Retention:</strong> cohort tables (signup week × activity week), churn risk flags from
-                  Stripe webhooks.
-                </li>
-                <li>
-                  <strong>Revenue:</strong> MRR/ARR from Stripe balance, LTV proxy, trial → paid conversion.
-                </li>
-                <li>
-                  <strong>Content:</strong> landing vs exit pages, path funnels, site search queries.
+                  <strong>Revenue:</strong> MRR/ARR from Stripe, trial → paid conversion funnels.
                 </li>
               </ul>
             </CardContent>

@@ -17,6 +17,7 @@ import {
 } from "@/lib/trainingDeckCursor";
 import type { TrainingProblem } from "@shared/schema";
 import { TrainingLimitBanner } from "@/components/training/TrainingLimitBanner";
+import { trackTrainerAttempt, trackTrainerView } from "@/lib/analytics";
 
 export interface PuzzlePlayerProps {
   problems: TrainingProblem[];
@@ -85,6 +86,7 @@ export function PuzzlePlayer({
 
   React.useEffect(() => {
     if (!problem) return;
+    trackTrainerView(problem.module);
     const c = new Chess(problem.fen);
     setChess(c);
     setFen(c.fen());
@@ -112,7 +114,14 @@ export function PuzzlePlayer({
           timeSpent: Math.round((Date.now() - startedAt) / 1000),
         }),
       }),
-    onSuccess: (data) => {
+    onSuccess: (data, solved) => {
+      if (problem) {
+        trackTrainerAttempt({
+          module: problem.module,
+          solved,
+          timeSpent: Math.round((Date.now() - startedAt) / 1000),
+        });
+      }
       void qc.invalidateQueries({ queryKey: ["training", "usage"] });
       if (data.levelUp) {
         toast({

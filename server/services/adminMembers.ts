@@ -8,21 +8,30 @@ import { getSitePricing } from "./sitePricing.js";
 
 type PgSql = NonNullable<ReturnType<typeof getPostgresSql>>;
 
+/** FROM + expand users array (JOINs must follow this, before WHERE). */
 function snapshotMembersFrom(handle: PgSql) {
   return handle`
     FROM app_snapshot s
     CROSS JOIN LATERAL jsonb_array_elements(s.payload->'users') AS elem
-    WHERE s.id = 1
-      AND elem->>'username' NOT LIKE 'anon-%'
   `;
 }
 
-function searchFilter(handle: PgSql, q: string) {
-  const pattern = `%${q}%`;
-  return handle`AND (
-    elem->>'username' ILIKE ${pattern}
-    OR COALESCE(elem->>'email', '') ILIKE ${pattern}
-  )`;
+function snapshotMembersWhere(handle: PgSql, q?: string) {
+  if (q?.trim()) {
+    const pattern = `%${q.trim()}%`;
+    return handle`
+      WHERE s.id = 1
+        AND elem->>'username' NOT LIKE 'anon-%'
+        AND (
+          elem->>'username' ILIKE ${pattern}
+          OR COALESCE(elem->>'email', '') ILIKE ${pattern}
+        )
+    `;
+  }
+  return handle`
+    WHERE s.id = 1
+      AND elem->>'username' NOT LIKE 'anon-%'
+  `;
 }
 
 export function registerAdminMembersRoutes(app: Express): void {
@@ -38,7 +47,7 @@ export function registerAdminMembersRoutes(app: Express): void {
 
     try {
       const membersFrom = snapshotMembersFrom(sql);
-      const search = q.length > 0 ? searchFilter(sql, q) : sql``;
+      const membersWhere = snapshotMembersWhere(sql, q);
 
       const rows = await sql`
         SELECT
@@ -54,7 +63,6 @@ export function registerAdminMembersRoutes(app: Express): void {
           last_sess.last_seen_at AS last_seen_at,
           COALESCE(attempts.n, 0)::int AS training_attempts
         ${membersFrom}
-        ${search}
         LEFT JOIN LATERAL (
           SELECT method
           FROM analytics_signups
@@ -72,6 +80,7 @@ export function registerAdminMembersRoutes(app: Express): void {
           FROM training_attempts
           WHERE user_id = (elem->>'id')::int
         ) attempts ON true
+        ${membersWhere}
         ORDER BY created_at DESC NULLS LAST
         LIMIT ${limit}
       `;
@@ -93,6 +102,7 @@ export function registerAdminMembersRoutes(app: Express): void {
     try {
       const pricing = await getSitePricing();
       const membersFrom = snapshotMembersFrom(sql);
+      const membersWhere = snapshotMembersWhere(sql);
 
       const [agg, byStatus, byPlan, snapshotMeta, payingRows] = await Promise.all([
         sql`
@@ -126,12 +136,14 @@ export function registerAdminMembersRoutes(app: Express): void {
               WHERE COALESCE((elem->>'subscriptionCancelAtPeriodEnd')::boolean, false)
             )::text AS cancel_scheduled
           ${membersFrom}
+          ${membersWhere}
         `,
         sql`
           SELECT
             COALESCE(NULLIF(TRIM(elem->>'subscriptionStatus'), ''), 'none') AS status,
             COUNT(*)::text AS c
           ${membersFrom}
+          ${membersWhere}
           GROUP BY 1
           ORDER BY COUNT(*) DESC
         `,
@@ -140,6 +152,7 @@ export function registerAdminMembersRoutes(app: Express): void {
             COALESCE(NULLIF(TRIM(elem->>'subscriptionPlan'), ''), 'none') AS plan,
             COUNT(*)::text AS c
           ${membersFrom}
+          ${membersWhere}
           GROUP BY 1
           ORDER BY COUNT(*) DESC
         `,
@@ -154,6 +167,7 @@ export function registerAdminMembersRoutes(app: Express): void {
             COALESCE(NULLIF(TRIM(elem->>'subscriptionPlan'), ''), 'none') AS plan,
             COUNT(*)::text AS c
           ${membersFrom}
+          ${membersWhere}
             AND COALESCE(elem->>'subscriptionStatus', '') IN ('active', 'trialing')
           GROUP BY 1
         `,

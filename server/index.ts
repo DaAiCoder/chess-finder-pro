@@ -14,6 +14,7 @@ import { registerSiteAnalyticsRoutes } from "./services/siteAnalytics.js";
 import { registerBillingRoutes, registerBillingWebhook } from "./services/billing.js";
 import { registerResendWebhook } from "./services/resendWebhook.js";
 import { registerContactRoutes } from "./services/contact.js";
+import { registerSupportRoutes } from "./services/supportChat.js";
 import { startOpsCron } from "./services/opsCron.js";
 import { recordServer5xx } from "./services/opsAlerts.js";
 import { runStartupSelfTests } from "./selfTest.js";
@@ -73,6 +74,7 @@ async function main() {
   registerBillingRoutes(app);
   registerProFeatureGate(app);
   registerContactRoutes(app);
+  registerSupportRoutes(app);
   registerRoutes(app);
 
   // Validate seeds + opening prefixes once at boot — non-fatal warnings.

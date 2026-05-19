@@ -9,6 +9,7 @@ import { isAdminHost } from "@/lib/adminHost";
 import { RequireAuth } from "@/components/RequireAuth";
 import { RequireTrainingPro } from "@/components/training/RequireTrainingPro";
 import { ConsentBanner } from "@/components/ConsentBanner";
+import { SupportChatWidget } from "@/components/support/SupportChatWidget";
 import { bootstrapConsent, trackPageView } from "@/lib/analytics";
 import { trackInternalPageView } from "@/lib/internalAnalytics";
 import ChessTrainer from "@/pages/chess-trainer";
@@ -279,6 +280,7 @@ export default function App() {
       </React.Suspense>
       <Toaster />
       <ConsentBanner />
+      <SupportChatWidget />
     </QueryClientProvider>
   );
 }

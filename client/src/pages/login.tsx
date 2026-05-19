@@ -10,6 +10,7 @@ import { resetPreviewQuotaAll } from "@/hooks/usePreviewQuota";
 import { cn } from "@/lib/utils";
 import { trackSignUp, trackEvent } from "@/lib/analytics";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { APP_NAME, pageTitle } from "@/lib/brand";
 
 /**
  * Aimchess-style login / registration:
@@ -39,7 +40,7 @@ export default function LoginPage() {
   const [mode, setMode] = React.useState<"login" | "register">(initialMode);
 
   useDocumentTitle(
-    mode === "register" ? "Create account — Chess Finder Pro" : "Sign in — Chess Finder Pro",
+    mode === "register" ? pageTitle("Create account") : pageTitle("Sign in"),
   );
   const [usePasswordless, setUsePasswordless] = React.useState(false);
 
@@ -208,7 +209,7 @@ export default function LoginPage() {
     <div className="min-h-[80vh] flex items-center justify-center p-4 bg-gradient-to-b from-background to-muted/30">
       <div className="w-full max-w-[420px]">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight">Chess Finder Pro</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{APP_NAME}</h1>
           <p className="text-xs text-muted-foreground mt-1">
             Train smarter. Find your next study, opening, or breakthrough.
           </p>

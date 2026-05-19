@@ -4,7 +4,7 @@ export default function PrivacyPage() {
   return (
     <LegalLayout title="Privacy Policy" effectiveDate="May 13, 2026">
       <p>
-        Chess Finder Pro ("we", "our", "us") is a chess training service. This
+        ChessGM ("we", "our", "us") is a chess training service. This
         policy explains what personal data we collect, why, how we use it, who
         we share it with, and the rights you have to access, correct, export,
         or delete it.
@@ -152,7 +152,7 @@ export default function PrivacyPage() {
 
       <h2>8. Children</h2>
       <p>
-        Chess Finder Pro is not directed at children under 13. We do not
+        ChessGM is not directed at children under 13. We do not
         knowingly collect personal data from anyone under 13. If you believe a
         child has provided us data, contact us and we will delete it.
       </p>

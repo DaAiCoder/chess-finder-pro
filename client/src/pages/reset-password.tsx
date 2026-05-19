@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { api } from "@/lib/queryClient";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { pageTitle } from "@/lib/brand";
 
 export default function ResetPasswordPage() {
   const search = useSearch();
   const token = React.useMemo(() => new URLSearchParams(search).get("token") ?? "", [search]);
 
-  useDocumentTitle("Reset password — Chess Finder Pro");
+  useDocumentTitle(pageTitle("Reset password"));
 
   const [password, setPassword] = React.useState("");
   const [confirm, setConfirm] = React.useState("");

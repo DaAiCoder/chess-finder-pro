@@ -44,9 +44,10 @@ import { AnalysisPreview } from "@/components/landing/AnalysisPreview";
 import { BlindTacticsPreview } from "@/components/landing/BlindTacticsPreview";
 import { OpponentPreview } from "@/components/landing/OpponentPreview";
 import { cn } from "@/lib/utils";
+import { APP_NAME } from "@/lib/brand";
 
 /**
- * Marketing landing page for ChessFinderPro.
+ * Marketing landing page for ChessGM.
  *
  * Layout (top → bottom):
  *   1. Hero — "Get better at chess, fast!" tagline + dual CTAs.
@@ -142,7 +143,7 @@ function TopBar({ signedIn, username }: { signedIn: boolean; username?: string }
           >
             ♞
           </span>
-          ChessFinderPro
+          {APP_NAME}
         </Link>
         <nav className="hidden md:flex items-center gap-1 ml-6 text-sm text-muted-foreground">
           <a href="#previews" className="px-3 py-1.5 rounded hover:bg-secondary hover:text-foreground">
@@ -730,7 +731,7 @@ function WhyDifferent() {
     <section id="why" className="space-y-8 scroll-mt-20">
       <div className="text-center space-y-2">
         <p className="text-xs uppercase tracking-[0.2em] text-emerald-300/80 font-semibold">
-          Why ChessFinderPro
+          Why {APP_NAME}
         </p>
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
           Built for the way humans actually improve

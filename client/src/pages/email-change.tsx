@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { api } from "@/lib/queryClient";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { pageTitle } from "@/lib/brand";
 
 /** Change email while signed out — requires current email + password. */
 export default function EmailChangePage() {
-  useDocumentTitle("Change email — Chess Finder Pro");
+  useDocumentTitle(pageTitle("Change email"));
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");

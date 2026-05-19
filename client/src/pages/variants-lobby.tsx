@@ -27,6 +27,7 @@ import {
 import { api } from "@/lib/queryClient";
 import { track, Events } from "@/lib/analytics";
 import { toast } from "@/components/ui/Toaster";
+import { APP_NAME } from "@/lib/brand";
 
 interface VariantDef {
   id: string;
@@ -297,7 +298,7 @@ export default function VariantsLobby() {
       <header className="relative z-10 flex flex-wrap items-center gap-3 px-4 md:px-6 min-h-14 py-2 border-b border-cyan-500/20 bg-gradient-to-r from-[#152238] via-[#1a2f45] to-[#152238]">
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <Home className="w-4 h-4 text-cyan-300" />
-          <span className="font-semibold tracking-tight">ChessFinderPro</span>
+          <span className="font-semibold tracking-tight">{APP_NAME}</span>
         </Link>
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[10px] uppercase tracking-[0.2em] px-2 py-1 rounded-md bg-cyan-500/15 text-cyan-200 border border-cyan-500/30">

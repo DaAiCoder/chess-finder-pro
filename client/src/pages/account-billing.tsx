@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { pageTitle } from "@/lib/brand";
 
 interface SubscriptionState {
   status: string;
@@ -21,7 +22,7 @@ export default function AccountBillingPage() {
   const [busy, setBusy] = React.useState(false);
   const [err, setErr] = React.useState<string | null>(null);
 
-  useDocumentTitle("Billing — Chess Finder Pro");
+  useDocumentTitle(pageTitle("Billing"));
 
   const { data: sub, isLoading } = useQuery<SubscriptionState>({
     queryKey: ["/api/billing/subscription"],

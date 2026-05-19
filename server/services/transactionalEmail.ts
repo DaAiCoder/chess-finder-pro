@@ -3,10 +3,10 @@
  *
  * Env:
  *   RESEND_API_KEY       — required to send (otherwise logs to stdout)
- *   RESEND_FROM          — verified sender, e.g. Chess Finder Pro <noreply@mail.chessgm.co>
+ *   RESEND_FROM          — verified sender, e.g. ChessGM <noreply@mail.chessgm.co>
  *   ADMIN_NOTIFY_EMAILS  — comma-separated admin inboxes for ops alerts
  *   APP_PUBLIC_ORIGIN    — used in template footers / links when building offline
- *   APP_NAME             — optional display name (default Chess Finder Pro)
+ *   APP_NAME             — optional display name (default ChessGM)
  */
 const RESEND_API = "https://api.resend.com/emails";
 
@@ -23,7 +23,7 @@ export interface SendEmailArgs {
 }
 
 function appName(): string {
-  return process.env.APP_NAME?.trim() || "Chess Finder Pro";
+  return process.env.APP_NAME?.trim() || "ChessGM";
 }
 
 function fromAddress(): string {

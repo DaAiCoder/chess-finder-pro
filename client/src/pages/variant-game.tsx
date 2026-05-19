@@ -24,6 +24,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { api } from "@/lib/queryClient";
 import { Home, ChevronLeft, RotateCcw } from "lucide-react";
 import type { VariantGame } from "@shared/schema";
+import { APP_NAME } from "@/lib/brand";
 
 interface Resp {
   game: VariantGame;
@@ -101,7 +102,7 @@ export default function VariantGamePage() {
       <header className="flex items-center gap-3 px-4 md:px-6 h-14 border-b border-black/30 bg-[#243447]">
         <Link href="/" className="flex items-center gap-2">
           <Home className="w-4 h-4" />
-          <span className="font-semibold">ChessFinderPro</span>
+          <span className="font-semibold">{APP_NAME}</span>
         </Link>
         <Link href="/play/variants" className="text-sm text-white/80 hover:text-white">
           <ChevronLeft className="inline w-4 h-4" /> All variants

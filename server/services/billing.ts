@@ -51,7 +51,7 @@ function stripe(): Stripe {
     const opts: StripeOpts = {
       apiVersion: "2024-06-20" as NonNullable<StripeOpts>["apiVersion"],
       typescript: true,
-      appInfo: { name: "ChessFinderPro" },
+      appInfo: { name: "ChessGM" },
     };
     stripeClient = new Stripe(key, opts);
   }

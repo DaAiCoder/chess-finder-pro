@@ -213,7 +213,7 @@ async function main() {
   // cause IPv6-only binding which makes localhost requests hang.
   app.listen(PORT, "0.0.0.0", () => {
     // eslint-disable-next-line no-console
-    console.log(`\n  ChessFinderPro listening on http://localhost:${PORT}`);
+    console.log(`\n  ChessGM listening on http://localhost:${PORT}`);
     console.log(`  Mode: ${NODE_ENV}`);
     console.log(`  Storage: ${process.env.DATABASE_URL ? "Postgres" : "in-memory"}`);
     {

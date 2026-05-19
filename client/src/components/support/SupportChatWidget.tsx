@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { streamSupportChat, type SupportMessage } from "@/lib/supportChatStream";
 import { Button } from "@/components/ui/Button";
+import { APP_NAME } from "@/lib/brand";
 
 const STORAGE_OPEN = "cfp-support-open";
 
@@ -158,7 +159,7 @@ export function SupportChatWidget() {
             <LifeBuoy className="h-4 w-4 text-emerald-400 shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold leading-tight">Support</p>
-              <p className="text-[10px] text-muted-foreground truncate">AI help · Chess Finder Pro</p>
+              <p className="text-[10px] text-muted-foreground truncate">AI help · {APP_NAME}</p>
             </div>
             <button
               type="button"

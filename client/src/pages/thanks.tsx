@@ -6,6 +6,7 @@ import { api } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { trackPurchase } from "@/lib/analytics";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { pageTitle } from "@/lib/brand";
 
 interface SubscriptionState {
   status: string;
@@ -30,7 +31,7 @@ export default function ThanksPage() {
   const [tries, setTries] = React.useState(0);
   const firedRef = React.useRef(false);
 
-  useDocumentTitle("Welcome to Pro — Chess Finder Pro");
+  useDocumentTitle(pageTitle("Welcome to Pro"));
 
   React.useEffect(() => {
     let stopped = false;

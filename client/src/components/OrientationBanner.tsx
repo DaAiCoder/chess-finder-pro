@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { APP_NAME } from "@/lib/brand";
 
 const STORAGE_KEY = "cfp-orientation-v2-dismissed";
 
@@ -128,7 +129,7 @@ export function OrientationBanner() {
         "px-4 py-3 md:px-6",
       )}
       role="region"
-      aria-label="What is new in ChessFinderPro"
+      aria-label={`What is new in ${APP_NAME}`}
     >
       <div className="max-w-5xl mx-auto space-y-3">
         <div className="flex items-start justify-between gap-3">

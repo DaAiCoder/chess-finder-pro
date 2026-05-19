@@ -7,6 +7,7 @@ import { api } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { trackEvent, trackBeginCheckout } from "@/lib/analytics";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { pageTitle, APP_NAME } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
 interface SitePricing {
@@ -40,8 +41,8 @@ export default function PricingPage() {
   const [err, setErr] = React.useState<string | null>(null);
 
   useDocumentTitle(
-    "Pricing — Chess Finder Pro",
-    "3-day full Pro trial, then subscribe monthly or yearly. Chess Finder Pro with Ask Tal, deep analysis, and every trainer.",
+    pageTitle("Pricing"),
+    `3-day full Pro trial, then subscribe monthly or yearly. ${APP_NAME} with Ask Tal, deep analysis, and every trainer.`,
   );
 
   React.useEffect(() => {
@@ -198,7 +199,7 @@ export default function PricingPage() {
         />
         <PlanCard
           tag="Pro"
-          title="Chess Finder Pro"
+          title={APP_NAME}
           accent
           price={isLoading ? "…" : fmt.format(plan === "monthly" ? monthly : yearlyMonthly)}
           subtitle={

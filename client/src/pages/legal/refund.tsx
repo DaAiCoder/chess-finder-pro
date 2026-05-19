@@ -4,13 +4,13 @@ export default function RefundPage() {
   return (
     <LegalLayout title="Refund Policy" effectiveDate="May 13, 2026">
       <p>
-        We want you to feel good about paying for Chess Finder Pro. This page
+        We want you to feel good about paying for ChessGM. This page
         describes when and how you can get a refund.
       </p>
 
       <h2>7-day refund on first paid period</h2>
       <p>
-        If you're unhappy with Chess Finder Pro for any reason within the first{" "}
+        If you're unhappy with ChessGM for any reason within the first{" "}
         <strong>7 days</strong> after your initial paid charge (monthly or
         yearly), email us via the <a href="/legal/contact">contact page</a> and
         we will refund the period in full. No interrogation, no "win-back"

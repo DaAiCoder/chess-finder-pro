@@ -37,6 +37,7 @@ import {
   Mic2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { APP_NAME } from "@/lib/brand";
 
 /** Per-ply position the player walks through. */
 /** Engine alternative at a position (for Lines panel / commentary). */
@@ -326,7 +327,7 @@ function TitleCard({ timeline }: { timeline: WatchTimeline }) {
   return (
     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-white p-6 text-center">
       <div className="text-[10px] uppercase tracking-[0.3em] text-emerald-400 mb-2">
-        ChessFinderPro · Watch
+        {APP_NAME} · Watch
       </div>
       <h2 className="text-2xl md:text-3xl font-bold mb-2 max-w-xl">
         {timeline.title}
@@ -361,7 +362,7 @@ function OutroCard({ timeline }: { timeline: WatchTimeline }) {
         </div>
       )}
       <div className="text-[10px] uppercase tracking-[0.3em] text-zinc-500 mt-6">
-        ChessFinderPro · Watch
+        {APP_NAME} · Watch
       </div>
     </div>
   );

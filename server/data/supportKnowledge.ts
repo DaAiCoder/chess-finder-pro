@@ -3,10 +3,10 @@
  * Keep factual — the model should not invent pricing or policies beyond this.
  */
 export const SUPPORT_KNOWLEDGE = `
-# Chess Finder Pro — support knowledge (chessgm.co)
+# ChessGM — support knowledge (chessgm.co)
 
 ## Product
-Chess Finder Pro is a chess training web app: analysis, opponent prep, tactics/endgame/opening trainers, game library, and "Ask Tal" AI coach.
+ChessGM is a chess training web app: analysis, opponent prep, tactics/endgame/opening trainers, game library, and "Ask Tal" AI coach.
 
 ## Plans & trial
 - Every new member account gets a **3-day full Pro trial** (all features).

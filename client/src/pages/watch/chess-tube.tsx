@@ -20,6 +20,7 @@ import {
 } from "@/data/chessTube";
 import { Clapperboard, ExternalLink, ListVideo, Search, Tv } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { APP_NAME } from "@/lib/brand";
 
 export default function ChessTube() {
   const searchStr = useSearch();
@@ -83,7 +84,7 @@ export default function ChessTube() {
             play inline.
           </p>
           <p className="text-xs text-muted-foreground mt-2">
-            Videos stay on YouTube; ChessFinderPro is a catalog &amp; player shell only.
+            Videos stay on YouTube; {APP_NAME} is a catalog &amp; player shell only.
           </p>
         </div>
         <Button asChild variant="outline" size="sm" className="shrink-0 self-start">

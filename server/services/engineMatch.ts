@@ -527,8 +527,8 @@ function buildPgnHeaders(
   const today = new Date();
   const ymd = `${today.getFullYear()}.${pad(today.getMonth() + 1)}.${pad(today.getDate())}`;
   const headers = {
-    Event: options.event ?? "ChessFinderPro Engine Match",
-    Site: "ChessFinderPro",
+    Event: options.event ?? "ChessGM Engine Match",
+    Site: "ChessGM",
     Date: ymd,
     Round: "1",
     White: options.white.name,
@@ -578,8 +578,8 @@ async function persistMatchToLibrary(
     result: result as LibraryGame["result"],
     eco: null,
     opening: null,
-    event: options.event ?? "ChessFinderPro Engine Match",
-    site: "ChessFinderPro",
+    event: options.event ?? "ChessGM Engine Match",
+    site: "ChessGM",
     playedAt: new Date(),
     timeControl:
       options.white.movetimeMs != null

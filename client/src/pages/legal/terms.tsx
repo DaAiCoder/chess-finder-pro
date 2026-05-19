@@ -4,7 +4,7 @@ export default function TermsPage() {
   return (
     <LegalLayout title="Terms of Service" effectiveDate="May 13, 2026">
       <p>
-        These Terms of Service ("Terms") govern your use of Chess Finder Pro
+        These Terms of Service ("Terms") govern your use of ChessGM
         ("the Service"). By creating an account, signing in, or paying for a
         subscription, you agree to these Terms. If you don't agree, don't use
         the Service.
@@ -12,7 +12,7 @@ export default function TermsPage() {
 
       <h2>1. What the Service is</h2>
       <p>
-        Chess Finder Pro is a chess training platform. It includes the Ask Tal
+        ChessGM is a chess training platform. It includes the Ask Tal
         AI coach, deep analysis tools, training modules, opening prep,
         repertoire drilling, and game library tools. Some features are free;
         others require an active "Pro" subscription.

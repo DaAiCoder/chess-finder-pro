@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { APP_NAME } from "@/lib/brand";
 
 /**
  * Public-page footer with policy links. Required for Google Ads policy review
@@ -18,7 +19,7 @@ export function SiteFooter() {
             >
               ♞
             </span>
-            Chess Finder Pro
+            {APP_NAME}
           </div>
           <p className="leading-relaxed">
             Train smarter. The AI coach, deep analysis, blind tactics,
@@ -85,7 +86,7 @@ export function SiteFooter() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 mt-6 pt-4 border-t border-border flex flex-wrap items-center justify-between gap-2">
-        <div>© {year} Chess Finder Pro. All rights reserved.</div>
+        <div>© {year} {APP_NAME}. All rights reserved.</div>
         <div className="text-[10px]">
           Secure payments by Stripe · Built on Lichess + chess.com public APIs
         </div>

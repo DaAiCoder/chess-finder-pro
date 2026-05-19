@@ -10,6 +10,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { APP_NAME } from "@/lib/brand";
 import { isSignedInUser, useCurrentUser } from "@/hooks/useCurrentUser";
 import { api } from "@/lib/queryClient";
 
@@ -65,7 +66,7 @@ export function Brand({ small = false }: { small?: boolean }) {
         ♞
       </span>
       <span className={cn("font-bold tracking-tight", small ? "text-base" : "text-lg")}>
-        ChessFinderPro
+        {APP_NAME}
       </span>
     </Link>
   );

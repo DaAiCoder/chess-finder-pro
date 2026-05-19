@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Link } from "wouter";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { pageTitle } from "@/lib/brand";
 
 /**
  * Shared chrome for the static policy pages (Privacy, Terms, Refund, Contact).
@@ -20,7 +21,7 @@ export function LegalLayout({
   draft?: boolean;
   children: React.ReactNode;
 }) {
-  useDocumentTitle(`${title} — Chess Finder Pro`);
+  useDocumentTitle(pageTitle(title));
   return (
     <div className="px-4 py-10 md:py-14 max-w-3xl mx-auto">
       <nav className="text-xs text-muted-foreground mb-4">

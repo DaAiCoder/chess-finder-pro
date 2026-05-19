@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Chessboard } from "@/components/chess/Chessboard";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/queryClient";
+import { APP_NAME } from "@/lib/brand";
 import {
   coachStreamHeadersOk,
   sseTailDelta,
@@ -234,7 +235,7 @@ export default function Play() {
       >
         <Link href="/" className="flex items-center gap-2 text-white">
           <Home className="w-4 h-4" />
-          <span className="font-semibold">ChessFinderPro</span>
+          <span className="font-semibold">{APP_NAME}</span>
         </Link>
         {initial.fromQuery && (
           <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">

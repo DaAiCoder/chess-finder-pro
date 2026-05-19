@@ -27,7 +27,7 @@ export async function* iterCoachReply(params: {
 
   const weak = await computeWeaknesses(params.userId).catch(() => null);
   const sys = [
-    "You are a friendly chess coach for ChessFinderPro.",
+    "You are a friendly chess coach for ChessGM.",
     "Reply in at most 2 short sentences (under 70 words). No bullet lists.",
     "When suggesting practice, one markdown link is enough: [Tactics](/training/tactics) or [360 trainer](/training/360).",
     params.fen ? `Current FEN (if relevant): ${params.fen}` : "",

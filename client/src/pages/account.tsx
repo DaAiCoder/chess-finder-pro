@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/queryClient";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { pageTitle } from "@/lib/brand";
 import { CreditCard, LogOut, BarChart3, Palette, Shield } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 
@@ -30,7 +31,7 @@ export default function AccountPage() {
   const [pwMsg, setPwMsg] = React.useState<string | null>(null);
   const [pwErr, setPwErr] = React.useState<string | null>(null);
 
-  useDocumentTitle("Account — Chess Finder Pro");
+  useDocumentTitle(pageTitle("Account"));
 
   React.useEffect(() => {
     const params = new URLSearchParams(search);

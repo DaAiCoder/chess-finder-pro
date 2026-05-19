@@ -11,6 +11,7 @@ import { installAuth, registerAuthRoutes, registerProFeatureGate } from "./auth.
 import { registerSitePricingRoutes } from "./services/sitePricing.js";
 import { registerOperatorPortalRoutes } from "./services/operatorPortal.js";
 import { registerSiteAnalyticsRoutes } from "./services/siteAnalytics.js";
+import { registerAdminMembersRoutes } from "./services/adminMembers.js";
 import { registerBillingRoutes, registerBillingWebhook } from "./services/billing.js";
 import { registerResendWebhook } from "./services/resendWebhook.js";
 import { registerContactRoutes } from "./services/contact.js";
@@ -71,6 +72,7 @@ async function main() {
   registerOperatorPortalRoutes(app);
   registerSitePricingRoutes(app);
   registerSiteAnalyticsRoutes(app);
+  registerAdminMembersRoutes(app);
   registerBillingRoutes(app);
   registerProFeatureGate(app);
   registerContactRoutes(app);

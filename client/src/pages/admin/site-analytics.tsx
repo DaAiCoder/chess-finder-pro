@@ -313,7 +313,7 @@ export default function AdminSiteAnalyticsPage() {
             <KpiCard
               label="Signed-in (visitors)"
               value={summary.totals.signedInVisitors.toLocaleString()}
-              hint="Distinct user IDs in sessions with views"
+              hint="Distinct user IDs with page views in range (includes anon sessions)"
               icon={UserCheck}
             />
             <KpiCard
@@ -334,13 +334,13 @@ export default function AdminSiteAnalyticsPage() {
             <KpiCard
               label="Paying subscribers"
               value={summary.subscriptions.activeOrTrialing.toLocaleString()}
-              hint={`of ${summary.subscriptions.totalUsers.toLocaleString()} registered users`}
+              hint={`of ${summary.subscriptions.totalUsers.toLocaleString()} members (app_snapshot)`}
               icon={Wallet}
             />
             <KpiCard
               label="New sign-ups"
               value={summary.subscriptions.newUsersInRange.toLocaleString()}
-              hint="analytics_signups (fallback: snapshot users.created_at)"
+              hint="analytics_signups, else app_snapshot users.createdAt"
               icon={Sparkles}
             />
           </div>

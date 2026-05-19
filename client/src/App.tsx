@@ -50,6 +50,7 @@ const CoachPage = React.lazy(() => import("@/pages/coach"));
 const LoginPage = React.lazy(() => import("@/pages/login"));
 const AdminPricing = React.lazy(() => import("@/pages/admin-pricing"));
 const AdminSiteAnalytics = React.lazy(() => import("@/pages/admin/site-analytics"));
+const AdminMembers = React.lazy(() => import("@/pages/admin/members"));
 const PricingPage = React.lazy(() => import("@/pages/pricing"));
 const ThanksPage = React.lazy(() => import("@/pages/thanks"));
 const AccountBillingPage = React.lazy(() => import("@/pages/account-billing"));
@@ -127,6 +128,7 @@ function AdminApp() {
             <Switch>
               <Route path="/" component={() => <Redirect to="/admin/site-analytics" />} />
               <Route path="/admin/site-analytics" component={AdminSiteAnalytics} />
+              <Route path="/admin/members" component={AdminMembers} />
               <Route path="/admin/pricing" component={AdminPricing} />
               <Route component={NotFound} />
             </Switch>

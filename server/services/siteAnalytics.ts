@@ -147,6 +147,82 @@ function parseQueryDate(q: unknown, fallback: Date): Date {
   return Number.isNaN(d.getTime()) ? fallback : d;
 }
 
+type PgSql = NonNullable<ReturnType<typeof getPostgresSql>>;
+
+/** Member accounts live in `app_snapshot.payload.users`, not the empty Drizzle `users` table. */
+function snapshotMembersFrom(handle: PgSql) {
+  return handle`
+    FROM app_snapshot s
+    CROSS JOIN LATERAL jsonb_array_elements(s.payload->'users') AS elem
+    WHERE s.id = 1
+      AND elem->>'username' NOT LIKE 'anon-%'
+  `;
+}
+
+async function snapshotMemberSubscriptionStats(handle: PgSql): Promise<{
+  totalUsers: number;
+  paying: number;
+  byStatus: { status: string; count: number }[];
+  byPlan: { plan: string; count: number }[];
+}> {
+  const membersFrom = snapshotMembersFrom(handle);
+  const [totals, byStatus, byPlan] = await Promise.all([
+    handle`
+      SELECT
+        COUNT(*)::text AS total_users,
+        COUNT(*) FILTER (
+          WHERE COALESCE(elem->>'subscriptionStatus', '') IN ('active', 'trialing')
+        )::text AS paying
+      ${membersFrom}
+    `,
+    handle`
+      SELECT
+        COALESCE(NULLIF(TRIM(elem->>'subscriptionStatus'), ''), 'none') AS status,
+        COUNT(*)::text AS c
+      ${membersFrom}
+      GROUP BY 1
+      ORDER BY COUNT(*) DESC
+    `,
+    handle`
+      SELECT
+        COALESCE(NULLIF(TRIM(elem->>'subscriptionPlan'), ''), 'none') AS plan,
+        COUNT(*)::text AS c
+      ${membersFrom}
+      GROUP BY 1
+      ORDER BY COUNT(*) DESC
+    `,
+  ]);
+
+  const t0 = totals[0] as unknown as { total_users: string; paying: string } | undefined;
+  return {
+    totalUsers: Number(t0?.total_users ?? 0),
+    paying: Number(t0?.paying ?? 0),
+    byStatus: (byStatus as unknown as { status: string; c: string }[]).map((r) => ({
+      status: r.status,
+      count: Number(r.c),
+    })),
+    byPlan: (byPlan as unknown as { plan: string; c: string }[]).map((r) => ({
+      plan: r.plan,
+      count: Number(r.c),
+    })),
+  };
+}
+
+async function snapshotSignupsInRange(
+  handle: PgSql,
+  fromSql: string,
+  toSql: string,
+): Promise<number> {
+  const membersFrom = snapshotMembersFrom(handle);
+  const rows = await handle`
+    SELECT COUNT(*)::text AS n
+    ${membersFrom}
+      AND (elem->>'createdAt')::timestamptz >= ${fromSql}::timestamptz
+      AND (elem->>'createdAt')::timestamptz <= ${toSql}::timestamptz
+  `;
+  return Number((rows[0] as unknown as { n: string })?.n ?? 0);
+}
+
 export function registerSiteAnalyticsRoutes(app: Express): void {
   app.post("/api/analytics/collect", async (req: Request, res: Response) => {
     const sql = getPostgresSql();
@@ -267,8 +343,7 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
       const pageViews = Number(t0?.page_views ?? 0);
       const sessions = Number(t0?.sessions ?? 0);
 
-      const [uniqAnon, uniqSigned, bounceAgg, subsAgg, subsStatus, subsPlan, newUsers, topRefs] =
-        await Promise.all([
+      const [uniqAnon, uniqSigned, bounceAgg, snapshotSubs, topRefs] = await Promise.all([
           sql`
             SELECT COUNT(DISTINCT s.anonymous_id)::text AS n
             FROM analytics_sessions s
@@ -302,29 +377,7 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
               COUNT(*) FILTER (WHERE n = 1)::text AS bounces
             FROM pv
           `,
-          sql`
-            SELECT
-              COUNT(*)::text AS total_users,
-              COUNT(*) FILTER (WHERE subscription_status IN ('active', 'trialing'))::text AS paying
-            FROM users
-          `,
-          sql`
-            SELECT COALESCE(NULLIF(TRIM(subscription_status), ''), 'none') AS status, COUNT(*)::text AS c
-            FROM users
-            GROUP BY 1
-            ORDER BY COUNT(*) DESC
-          `,
-          sql`
-            SELECT COALESCE(NULLIF(TRIM(subscription_plan), ''), 'none') AS plan, COUNT(*)::text AS c
-            FROM users
-            GROUP BY 1
-            ORDER BY COUNT(*) DESC
-          `,
-          sql`
-            SELECT COUNT(*)::text AS n
-            FROM users
-            WHERE created_at >= ${fromSql}::timestamptz AND created_at <= ${toSql}::timestamptz
-          `,
+          snapshotMemberSubscriptionStats(sql),
           sql`
             SELECT
               COALESCE(NULLIF(TRIM(substring(s.referrer from 1 for 120)), ''), '(direct)') AS ref,
@@ -342,10 +395,14 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
         ]);
 
       const signupEvents = await countSignupsInRange(from, to);
-      const snapshotSignups = await storage.countMemberSignupsInRange(from, to);
-      const postgresSignups = Number((newUsers[0] as unknown as { n: string })?.n ?? 0);
+      const snapshotSignupsMem = await storage.countMemberSignupsInRange(from, to);
+      const snapshotSignupsSql = await snapshotSignupsInRange(sql, fromSql, toSql);
       const newUsersInRange =
-        signupEvents > 0 ? signupEvents : snapshotSignups > 0 ? snapshotSignups : postgresSignups;
+        signupEvents > 0
+          ? signupEvents
+          : snapshotSignupsMem > 0
+            ? snapshotSignupsMem
+            : snapshotSignupsSql;
 
       const ua = uniqAnon[0] as unknown as { n: string } | undefined;
       const us = uniqSigned[0] as unknown as { n: string } | undefined;
@@ -357,7 +414,9 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
       const avgPagesPerSession =
         sessions > 0 ? Math.round((pageViews / sessions) * 100) / 100 : 0;
 
-      const sg = subsAgg[0] as unknown as { total_users: string; paying: string } | undefined;
+      const snapshotSubsStats = snapshotSubs as Awaited<
+        ReturnType<typeof snapshotMemberSubscriptionStats>
+      >;
 
       return res.json({
         from: from.toISOString(),
@@ -377,17 +436,11 @@ export function registerSiteAnalyticsRoutes(app: Express): void {
           bounceRatePct,
         },
         subscriptions: {
-          totalUsers: Number(sg?.total_users ?? 0),
-          activeOrTrialing: Number(sg?.paying ?? 0),
+          totalUsers: snapshotSubsStats.totalUsers,
+          activeOrTrialing: snapshotSubsStats.paying,
           newUsersInRange,
-          byStatus: (subsStatus as unknown as { status: string; c: string }[]).map((r) => ({
-            status: r.status,
-            count: Number(r.c),
-          })),
-          byPlan: (subsPlan as unknown as { plan: string; c: string }[]).map((r) => ({
-            plan: r.plan,
-            count: Number(r.c),
-          })),
+          byStatus: snapshotSubsStats.byStatus,
+          byPlan: snapshotSubsStats.byPlan,
         },
         topReferrers: (topRefs as unknown as { ref: string; c: string }[]).map((r) => ({
           referrer: r.ref,

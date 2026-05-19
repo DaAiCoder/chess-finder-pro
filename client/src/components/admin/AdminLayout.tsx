@@ -1,10 +1,11 @@
 import * as React from "react";
 import { Link, useLocation } from "wouter";
-import { BarChart3, LayoutDashboard, DollarSign } from "lucide-react";
+import { BarChart3, LayoutDashboard, DollarSign, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/admin/site-analytics", label: "Site analytics", icon: BarChart3 },
+  { href: "/admin/members", label: "Members", icon: Users },
   { href: "/admin/pricing", label: "Pricing", icon: DollarSign },
 ] as const;
 

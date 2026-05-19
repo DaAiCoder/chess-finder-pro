@@ -5,12 +5,16 @@ import "./index.css";
 import "chessground/assets/chessground.base.css";
 import "chessground/assets/chessground.brown.css";
 import "chessground/assets/chessground.cburnett.css";
+import { installChunkLoadRecovery, clearChunkLoadRecoveryFlag } from "./lib/chunkLoadRecovery";
+
+installChunkLoadRecovery();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
 );
+clearChunkLoadRecoveryFlag();
 
 // PWA: register the service worker in production only.
 //

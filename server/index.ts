@@ -124,7 +124,6 @@ async function main() {
     const distClient = path.resolve(__dirname, "../client");
     const indexPath = path.join(distClient, "index.html");
     const fs = await import("node:fs/promises");
-    let cachedSpaHtml: string | null = null;
 
     try {
       const assetsDir = path.join(distClient, "assets");
@@ -140,6 +139,13 @@ async function main() {
     } catch {
       /* non-fatal */
     }
+
+    const spaHtmlHeaders = {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "private, no-cache, no-store, must-revalidate",
+      "CDN-Cache-Control": "no-store",
+      Pragma: "no-cache",
+    };
 
     app.use(
       express.static(distClient, {
@@ -174,18 +180,8 @@ async function main() {
     app.get("*", async (req, res, next) => {
       if (req.path.startsWith("/api")) return next();
       try {
-        if (cachedSpaHtml === null) {
-          cachedSpaHtml = await fs.readFile(indexPath, "utf-8");
-        }
-        const html = injectOperatorPortalMeta(cachedSpaHtml, req);
-        res
-          .status(200)
-          .set({
-            "Content-Type": "text/html; charset=utf-8",
-            "Cache-Control": "private, no-cache, no-store, must-revalidate",
-            Pragma: "no-cache",
-          })
-          .send(html);
+        const html = injectOperatorPortalMeta(await fs.readFile(indexPath, "utf-8"), req);
+        res.status(200).set(spaHtmlHeaders).send(html);
       } catch (e) {
         next(e);
       }
